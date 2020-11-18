@@ -1,11 +1,11 @@
-# Huvudklass för StrögWare, mjukvaran för storströgarnas racedator.
 import pygame
 
 class StrögWare:
-	'''Huvudklass som innehåller programmets högsta logik'''
+	'''Main class of StrögWare. Contains high level logic
+	managing all parts of the program'''
 
 	def __init__(self):
-		# Fixa skärmen och allt sånt soft.
+		# Initiate the screen and all attributes of the instance.
 
 		_init_track()
 
@@ -13,5 +13,5 @@ class StrögWare:
 		
 
 	def _init_track(self):
-		'''Hjälpmetod som ställer in allt efter
-		vald bana'''
+		'''Help method to set everyting 
+		up after the chosen track'''
