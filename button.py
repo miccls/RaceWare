@@ -1,19 +1,24 @@
 # Knapp - klass.
 
 import pygame.font
+from pygame.sprite import Sprite
 
-class Button():
 
-	def __init__(self, ai_game, msg, color = (0, 0, 0)):
+class Button(Sprite):
+
+	def __init__(self, ai_game, msg, color = (30, 30, 30), font_size = 48):
 		'''Hämtar nödvändig info för att göra en knapp'''
+
+		super().__init__()
+
 		self.screen = ai_game.screen
 		self.screen_rect = ai_game.screen.get_rect()
 
 		# Storlek på knappen.
-
+		self.text = msg
 		self.color = color
 		self.text_color = (0xff, 0xff, 0xff)
-		self.font = pygame.font.SysFont(None, 48)
+		self.font = pygame.font.SysFont(None, font_size)
 
 		# Intressant metod används här nedan för att skriva ut meddelandet på knappen
 

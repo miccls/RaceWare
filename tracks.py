@@ -10,7 +10,13 @@ class Tracks:
 			'mantorp' : { 'längd' : 1234, 
 			'longitud' : 123, 'latitud' : 123},
 			'knutstorp' : { 'längd' : 1234, 
-			'longitud' : 123, 'latitud' : 123}
+			'longitud' : 123, 'latitud' : 123},
+			'anderstorp' : { 'längd' : 1234, 
+			'longitud' : 123, 'latitud' : 123},
+			'sturup' : { 'längd' : 1234, 
+			'longitud' : 123, 'latitud' : 123},
+			'ingen bana' : {'längd' : 0, 
+			'longitud' : 0, 'latitud' : 0}
 			}
 
 
