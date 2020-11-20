@@ -6,13 +6,13 @@ from pygame.sprite import Sprite
 
 class Button(Sprite):
 
-	def __init__(self, ai_game, msg, color = (30, 30, 30), font_size = 48):
+	def __init__(self, main, msg, color = (30, 30, 30), font_size = 48):
 		'''Hämtar nödvändig info för att göra en knapp'''
 
 		super().__init__()
 
-		self.screen = ai_game.screen
-		self.screen_rect = ai_game.screen.get_rect()
+		self.screen = main.screen
+		self.screen_rect = main.screen.get_rect()
 
 		# Storlek på knappen.
 		self.text = msg

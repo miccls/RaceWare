@@ -8,4 +8,5 @@ class Settings:
 		self.screen_widht = 1920
 		self.screen_height = 1080
 		self.bg_color = (0, 0, 0)
+		self.gauge_bg_color = (0,0,0)
 		self.strögware_active = False

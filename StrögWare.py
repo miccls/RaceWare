@@ -2,6 +2,8 @@
 # run() så att skärmen går igång och fixa en _check_events() för att se till att
 # skärmen stängs.
 
+# Store gauge value in class and update it when reading new value.
+
 
 
 import pygame
@@ -10,6 +12,7 @@ import sys
 from tracks import Tracks
 from settings import Settings
 from button import Button
+from gauges import Gauges
 
 class StrögWare:
 	'''Main class of StrögWare. Contains high level logic
@@ -25,8 +28,10 @@ class StrögWare:
 		# Making a Tracks instance to get all track info.
 		self.tracks = Tracks()
 
-		# Make a dictionary for all buttons.
+		# Make all the sprite groups in the program
 		self.track_buttons = pygame.sprite.Group()
+		self.all_gauges = pygame.sprite.Group()
+
 
 		self.screen = pygame.display.set_mode(
 			(0, 0), pygame.FULLSCREEN)
@@ -120,16 +125,67 @@ class StrögWare:
 			pygame.mouse.set_visible(False)
 			print(self.chosen_track.title())
 			self._init_track(self.chosen_track)
+			self._init_gauges()
 
 
+	def _init_gauges(self):
+		'''Initiate the gauges'''
+		gauge_title_color = (0xff,0xff,0xff)
+		self.rpm_gauge = Gauges(self)
+		self.kph_gauge = Gauges(self)
+		self.rpm_title_font = pygame.font.SysFont(None, 48)
+		self.kph_title_font = pygame.font.SysFont(None, 48)
+		self.rpm_title = self.rpm_title_font.render('RPM',
+			True, gauge_title_color, self.settings.bg_color)
+		self.kph_title = self.rpm_title_font.render('KM/H',
+			True, gauge_title_color, self.settings.bg_color)
+		# Set the rects
+
+
+		# Try to incorpoate the titles in the gauge - class.
+		self.rpm_gauge.gauge_rect.midleft = self.screen.get_rect().midleft
+		self.kph_gauge.gauge_rect.midleft = self.screen.get_rect().midleft
+
+		self.rpm_gauge.gauge_rect.x += 75
+		self.kph_gauge.gauge_rect.x += 75
+
+		self.rpm_gauge.gauge_rect.y += 100
+		self.kph_gauge.gauge_rect.y -= 100
+
+		self.rpm_gauge.default_rect = self.rpm_gauge.gauge_rect
+		self.kph_gauge.default_rect = self.kph_gauge.gauge_rect
+
+		self.rpm_title_rect = self.rpm_title.get_rect()
+		self.kph_title_rect = self.kph_title.get_rect()
+
+		self.rpm_title_rect.midbottom = self.rpm_gauge.gauge_rect.midtop
+		self.kph_title_rect.midbottom = self.kph_gauge.gauge_rect.midtop
+		#Add gauges to sprite group
+		self.all_gauges.add(self.rpm_gauge)
+		self.all_gauges.add(self.kph_gauge)
+
+
+	def _update_gauge(self,gauge):
+		# Fixa så att alla gauges uppdateras med deras värden
+		gauge.give_gauge_value()
+		gauge.gauge_rect = gauge.default_rect
+		
 
 
 	def _update_screen(self):
+		'''Update the screen'''
+
 		self.screen.fill(self.settings.bg_color)
 		if not self.settings.strögware_active:
 			for sprite in self.track_buttons.sprites():
 				sprite.draw_button()
 		self.title.draw_button()
+
+		if self.settings.strögware_active:
+			for gauge in self.all_gauges.sprites():
+				self._update_gauge(gauge)
+				gauge.show_gauge()
+
 
 		pygame.display.flip()
 
