@@ -3,7 +3,7 @@ from pygame.sprite import Sprite
 
 class Gauges(Sprite):
 	''' To display text for gauges '''
-	def __init__(self,main, label,font_size = 48):
+	def __init__(self,main, label,font_size = 48, unit = ''):
 
 		super().__init__()
 
@@ -17,6 +17,7 @@ class Gauges(Sprite):
 		self.font = pygame.font.SysFont(None,font_size)
 		self.value = 0
 		# Prepare the immage of the gauge - number.
+		self.unit = ' ' + unit # Add space
 		self.give_gauge_value()
 		self.default_rect = self.gauge_rect
 
@@ -30,7 +31,7 @@ class Gauges(Sprite):
 
 	def give_gauge_value(self):
 		'''Make gauge value into image'''
-		gauge_str = str(self.value)
+		gauge_str = (str(self.value) + self.unit)
 		self.gauge_image = self.font.render(gauge_str, True,
 			self.text_color, self.settings.gauge_bg_color)
 		# Placing the text in appropriate place

@@ -1,7 +1,8 @@
 # Initially I will add information manually but eventually 
 # I might make it possible to just add a text file with 
 # information of the tracks.
-import pygame
+import tkinter as tk
+from PIL import Image, ImageTk
 
 class Tracks:
 	''' A class to manage various tracks that we will visit '''
@@ -21,11 +22,16 @@ class Tracks:
 			'longitud' : 0, 'latitud' : 0}
 			}
 		self.image_dict = {
-			'sturup' : 'track_images/sturup.png',
-			'knutstorp' : 'track_images/knutstorp.png'
+			'sturup' : '/Users/martinsvardsjo/Documents/Str-gWare/track_images/sturup.png',
+			'knutstorp' : '/Users/martinsvardsjo/Documents/Str-gWare/track_images/knutstorp.png'
 			}
 
 	def get_image(self, track):
+
+		# Kod här för att få till en schysst size på bilden.
 		image_path = self.image_dict[track]
-		return pygame.image.load(image_path)
+		im = Image.open(image_path)
+		im = im.resize((round(im.size[0]*0.25), round(im.size[1]*0.25)))
+		im.save('resized.png')
+		return tk.PhotoImage(file = 'resized.png')
 

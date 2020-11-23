@@ -5,9 +5,9 @@ class Settings:
 
 		# These are defaults which get changed
 		# in the main class with the FULLSCREEN command.
-		self.screen_widht = 1920
-		self.screen_height = 1080
-		self.bg_color = (0, 0, 0)
+		self.screen_width = 800
+		self.screen_height = 800
+		self.bg_color = '#f1b434'
 		self.gauge_bg_color = (0,0,0)
 		self.strögware_active = False
 		self.space = -30 # Mimic the push of a spacebar in images

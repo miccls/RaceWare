@@ -30,7 +30,6 @@ class Shiftlight:
 		for number in range(1,self.settings.light_number+1):
 			x_pos = self.bg_rect.left + (number)*(self.settings.space_between +
 				(self.settings.light_radius*2)) - self.settings.light_radius
-			print(x_pos)
 			self.light_centers[str(number)] = (x_pos, y_pos)
 
 		self.light_colors = {}
