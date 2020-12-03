@@ -1,23 +1,14 @@
 import obd
 
 class OBDII:
-  def __init__(self,main):
+  def __init__(self,main, command_dict):
     # OBD setup
-    # Kommandon som bilen ska läsa.
-    self.command_list = {
-    	'rpm' : 'RPM',
- 			'kph' : 'SPEED',
-      'throttle' : 'THROTTLE_POS',
-      'water' : 'COOLANT_TEMP',
-      'oil' : 'OIL_TEMP',
-      'load' : 'ENGINE_LOAD'
-      }
 
     obd.logger.setLevel(obd.logging.DEBUG)
 
     # Connect to OBDII adapter
     ports = obd.scan_serial()
-    connection = obd.OBD(ports[0])
+    self.connection = obd.OBD(ports[0])
     # Print supported commands
 
     # List of commands for different information
@@ -37,13 +28,13 @@ class OBDII:
   
 
 # Send a command
-  def get_value(self, type):
-    command = input("Enter command (type 'quit' to exit): ")
+  def get_value(self, command_arg):
+    command = command_arg
     if (command == "quit"):
       pass
     try:
       res = self.connection.query(obd.commands[command])
-      print(res.value)
+      return res.value
     except Exception as ex:
       print("Error: " + str(ex))
 

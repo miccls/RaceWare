@@ -1,44 +1,40 @@
-import pygame.font
-from pygame.sprite import Sprite
+import tkinter as tk
 
-class Gauges(Sprite):
+# Gå in i dokumentationen och kolla upp label och place()
+
+class Gauges:
 	''' To display text for gauges '''
-	def __init__(self,main, label,font_size = 48, unit = ''):
+	def __init__(self, master, label_text, main, unit = '', upper_limit = None):
 
-		super().__init__()
-
-		self.screen = main.screen
-		self.screen_rect = self.screen.get_rect()
-		self.settings = main.settings
-		self.default_rect = 0
 		# Font and text settings
-
+		self.upper_limit = upper_limit
+		self.settings = main.settings
+		self.master = master
 		self.text_color = (0xff,0xff,0xff)
-		self.font = pygame.font.SysFont(None,font_size)
 		self.value = 0
-		# Prepare the immage of the gauge - number.
+		# Prepare the image of the gauge - number.
+		self.label_text = label_text
+		self.tklabel = tk.Label(master, text = self.label_text,
+			bg = master['background'],font=(self.settings.gauge_font,
+			self.settings.gauge_font_size,),
+			fg = 'white', height = 2)
 		self.unit = ' ' + unit # Add space
 		self.give_gauge_value()
-		self.default_rect = self.gauge_rect
-
-
 		# Making gauge label and image.
 		# This label is used to show what is being displayed
-		self.label_text = label
-		self.label_image = self.font.render(label.upper(),
-			True, self.text_color, self.settings.bg_color)
-		self.label_image_rect = self.label_image.get_rect()
-
+		
+		
 	def give_gauge_value(self):
 		'''Make gauge value into image'''
-		gauge_str = (str(self.value) + self.unit)
-		self.gauge_image = self.font.render(gauge_str, True,
-			self.text_color, self.settings.gauge_bg_color)
-		# Placing the text in appropriate place
-		self.gauge_rect = self.gauge_image.get_rect()
+		gauge_str = self.label_text.title() + ':' + (str(self.value) + self.unit)
+		self.tklabel['text'] = gauge_str
+		if self.upper_limit is not None:
+			if self.value > self.upper_limit:
+				self.tklabel['fg'] = self.settings.red_color
+			else:
+				self.tklabel['fg'] = 'white'
 
 	def show_gauge(self):
 		'''Draw the gauge on the screen'''
-		self.screen.blit(self.label_image, self.label_image_rect)
-		self.screen.blit(self.gauge_image, self.gauge_rect)
+		self.tklabel.pack()
 
