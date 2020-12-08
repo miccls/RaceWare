@@ -6,8 +6,8 @@ class Settings:
 
 		# These are defaults which get changed
 		# in the main class with the FULLSCREEN command.
-		self.screen_width = 800
-		self.screen_height = 400
+		self.screen_width = 720   #800
+		self.screen_height = 400  #480 är skärmen
 		self.bg_color = '#f1b434' # FUTF-gul: #f1b434
 		# Fixa filsökvägen där vi kör skriptet.
 		self.script_path = os.path.dirname( os.path.abspath(__file__) )
@@ -23,7 +23,7 @@ class Settings:
 		self.timer_font = "Helvetica"
 		self.no_image_text = "Karta saknas."
 		self.pos_point_radius = 10
-		self.button_color
+		self.button_color = 'white'
 
 
 		# Flags, alla initeras som False
