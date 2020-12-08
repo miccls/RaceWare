@@ -234,7 +234,7 @@ class tkinterströg:
         self.gauge_dict = {}
         # Lägger till knapp för att ändra mätare.
         self.gauge_button = tk.Button(self.gauge_frame,
-            bg = '#000000', highlightcolor = '#ffffff',
+            bg = '#000000', highlightcolor = self.settings.button_color,
             text = 'Ändra',
             width = 10,
             height = 2,
@@ -286,7 +286,7 @@ class tkinterströg:
         # Knapp för att bekräfta val
         self.confirm = False
         self.confirm_button = tk.Button(self.gauge_frame,
-            bg = '#000000', highlightcolor = '#ffffff',
+            bg = self.settings.button_color, highlightcolor = '#ffffff',
             text = 'Bekräfta',
             width = 10,
             height = 2,
