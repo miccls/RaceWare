@@ -17,7 +17,8 @@ class Position:
             font = (self.settings.timer_font, self.settings.timer_font_size),
             fg = 'white',
             bg = main.canvas['background'],)
-        self.lap_time_label.place(relx = 0.4, rely = 0.5, anchor = 'nw')
+        # Placerar trevligt under shiftlighten.
+        self.lap_time_label.place(relx = 0.4, rely = 0.3, anchor = 'nw')
 
         # Skapar punkten.
         self.pointer = master.create_oval(0,

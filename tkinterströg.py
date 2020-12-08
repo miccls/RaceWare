@@ -8,6 +8,9 @@ Fixa lite trevligare utseende. Bilder från Izabelle. Lägg in knapp för start,
 Lägg också in en för safety car. Lägg dessutom in en meny där man får välja vilka mätare man vill ha 
 och vid ett val så skalas bild och frame om och de valda mätarna placeras ut.
 
+Kanske ändra framen med visare så att den är i fler rader. Då kan man kanske
+öka textstorleken samtidigt som man behåller alla mätare i skärmen.
+
 -------------------------------------------------------------------------------------
 
 För medlemmar i storströgarna som är inne på sightseeing::
@@ -223,7 +226,8 @@ class tkinterströg:
         self.start_count_button = tk.Button(self.canvas, text = "Start", 
             fg = self.settings.green_color, 
             command = lambda x = self: self.gps_pos.start_count(x))
-        self.start_count_button.place(relx = 0.9, rely = 0.1, anchor = 'center')
+        # rely = 0.15 linjerar i överkant med shiftlighten.
+        self.start_count_button.place(relx = 0.9, rely = 0.15, anchor = 'center')
 
         # Fixa mätare.
         self._init_gauges()
