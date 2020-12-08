@@ -35,6 +35,7 @@ from position import Position
 from PIL import Image, ImageTk
 import time
 from time import sleep
+from os import sys
 from gauges import Gauges
 from shiftlight import Shiftlight
 # Tills jag vet att allt fungerar.
@@ -110,7 +111,7 @@ class tkinterströg:
         button_dict = {}
         for key in self.tracks.tracks_dict.keys():
             button_dict[key] = tk.Button(self.buttonframe,
-            bg = 'red', highlightcolor = 'red',
+            bg = self.settings.button_color,
             text = key.title(),
             width = 15,
             height = 2,
@@ -171,6 +172,8 @@ class tkinterströg:
                 self.counting = False
             else:
                 self.counting = True
+        if event.char == 'q':
+            sys.exit()
 
     def run(self):
         self._update_screen()
