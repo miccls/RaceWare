@@ -269,7 +269,7 @@ class tkinterströg:
             bg = self.canvas['background'],
             fg = 'white',
             font = (self.settings.gauge_font,
-				36,)).pack()
+				self.settings.gauge_font_size,)).pack()
         # Sätt ut valmöjligheter
         self.check_box_dict = {}
         self.check_box_variables = {}
@@ -278,9 +278,9 @@ class tkinterströg:
             self.check_box_variables[key] = tk.BooleanVar()
             self.check_box_dict[key] = tk.Checkbutton(self.gauge_frame, text = key.title(),
                 takefocus = 0, variable = self.check_box_variables[key],
-                bg = '#000000', fg = '#ffffff',
+                bg = self.canvas['background'], fg = '#ffffff',
                 height = 2, width = 15,
-                font = (self.settings.gauge_font, 30))
+                font = (self.settings.gauge_font, self.settings.gauge_font_size))
             self.check_box_dict[key].pack()
             count += 1  # Fortsätt här, knapparna ska ut och längst ner ska knapp som säger välj, när den trycks så gå vidare.
         # Knapp för att bekräfta val

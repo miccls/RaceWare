@@ -17,7 +17,7 @@ class Position:
             font = (self.settings.timer_font, self.settings.timer_font_size),
             fg = 'white',
             bg = main.canvas['background'],)
-        self.lap_time_label.place(relx = 0.45, rely = 0.4, anchor = 'nw')
+        self.lap_time_label.place(relx = 0.5, rely = 0.5, anchor = 'center')
 
         # Skapar punkten.
         self.pointer = master.create_oval(0,

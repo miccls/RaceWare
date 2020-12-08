@@ -17,9 +17,9 @@ class Settings:
 		self.map_scale = 0.35
 		self.gauge_frame_width = 0.35
 		self.gauge_frame_height = 0.65
-		self.gauge_font_size = 36
+		self.gauge_font_size = 14    #36 har jag använt från början
 		self.gauge_font = "Helvetica"
-		self.timer_font_size = 54
+		self.timer_font_size = 42  # 54
 		self.timer_font = "Helvetica"
 		self.no_image_text = "Karta saknas."
 		self.pos_point_radius = 10
