@@ -70,13 +70,13 @@ class tkinterströg:
             'rpm' : {'unit' : None, 'upper_limit' : 8000},
  			'km/h' : {'unit' : None, 'upper_limit' : None}, 
             'throttle' : {'unit' : '%', 'upper_limit' : None},
-            'water' : {'unit' : 'deg', 'upper_limit' : 110},
-            'oiltemp' : {'unit' : 'deg', 'upper_limit' : 180},
+            'water' : {'unit' : '°', 'upper_limit' : 110},
+            'oiltemp' : {'unit' : '°', 'upper_limit' : 180},
             'load' : {'unit' : 'hp', 'upper_limit' : None}
             }
 
         try: 
-            self.obd_instance = OBDII(self, command_list)
+            self.obd_instance = OBDII(self, self.command_list)
             self.settings.obd_active = True
         except:
             pass
@@ -131,20 +131,35 @@ class tkinterströg:
                 value.give_gauge_value()
             self.shiftlight.update_colors(
                 self.gauge_dict['rpm'].value)
+        # Räkna varvtid.
+        try:
+            if self.gps_pos.counter: 
+             # Kolla här så att allt är ok.
+             # Se till så att _format_time används i 
+             # _update_pos()!
+                self._update_pos()
+        except AttributeError:
+            pass 
 
-    def _format_time(self, time):
+
+    def _format_time(self):
         '''Formatterar ett antal sekunder'''
         # Här får jag fixa så att det blir fint.
-        return time
+        display_time = time.time() - self.gps_pos.start_time
+        decimals = display_time - round(display_time - 0.5)
+        # Tar fram hundradelar
+        hundreds = round(decimals*100 - 0.5)
+        seconds = round(display_time - 0.5)
+        minutes = round((seconds/60) - 0.5)
+        seconds -= minutes*60
+        display_time = f"{minutes}:{seconds}:{hundreds}"
+        return display_time
             
     def _update_pos(self):
         '''Uppdaterar punkten på kartan'''
-        if not self.gps_pos.counter:
-            return
-        self.lap_time = time.time() - self.gps_pos.start_time 
-        self.lap_time_label['text'] = self._format_time(self.lap_time)
-        position = self.gps_pos.get_pos()
-        self.gps_pos.set_pos(position)
+        # Nästa steg är att nolla den när man ser att det funkar.
+        if self.gps_pos.counter:
+            self.gps_pos.lap_time_label.config(text = self._format_time())
 
     def _key_pressed(self, event):
         print(event.char)
@@ -178,7 +193,7 @@ class tkinterströg:
                 y=self.settings.screen_height * 0.75,
                 anchor = 'center',
                 )
-            image = self.image_canvas.create_image(
+            self.image_canvas.create_image(
                 0,
                 0,
                 anchor = 'nw', 
@@ -196,6 +211,13 @@ class tkinterströg:
             self.no_picture_label.place(x=self.settings.screen_width * 0.75,
                 y=self.settings.screen_height * 0.75,
                 anchor = 'center',)
+
+        # Fixa countknappen, det gör jag hellre här än i positionklassen
+
+        self.start_count_button = tk.Button(self.canvas, text = "Start", 
+            fg = self.settings.green_color, 
+            command = lambda x = self: self.gps_pos.start_count(x))
+        self.start_count_button.place(relx = 0.9, rely = 0.1, anchor = 'center')
 
         # Fixa mätare.
         self._init_gauges()
@@ -243,7 +265,7 @@ class tkinterströg:
         for gauge in self.gauge_dict.values():
             gauge.tklabel.destroy()
             del gauge
-        gauge_label = tk.Label(self.gauge_frame, text = "Välj mätare: ",
+        tk.Label(self.gauge_frame, text = "Välj mätare: ",
             bg = self.canvas['background'],
             fg = 'white',
             font = (self.settings.gauge_font,

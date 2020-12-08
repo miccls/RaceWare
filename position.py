@@ -7,15 +7,17 @@ class Position:
         '''Initierar GPS-punkten och varvtidsklockan'''
         self.master = master
         self.settings = main.settings
-        # Om vi har börjat tidtagning.
+        # För att kunna modifiera objekt på huvudcanvasen.
+
         self.counter = False
+        self.start_time = 0
 
         # Fixa varvtidsklockan.
-        self.lap_time_label = tk.Label(main.canvas, text = '00:00:00',
+        self.lap_time_label = tk.Label(main.canvas, text = '',
             font = (self.settings.timer_font, self.settings.timer_font_size),
             fg = 'white',
             bg = main.canvas['background'],)
-        self.lap_time_label.place(relx = 0.5, rely = 0.4, anchor = 'center')
+        self.lap_time_label.place(relx = 0.45, rely = 0.4, anchor = 'nw')
 
         # Skapar punkten.
         self.pointer = master.create_oval(0,
@@ -36,15 +38,21 @@ class Position:
             x0 + self.settings.pos_point_radius,
             y0 + self.settings.pos_point_radius)
 
-    def start_count(self, bool):
-        self.counter = bool
-        if bool:
+    def start_count(self, main):
+        self.counter = not self.counter
+        if self.counter:
             self.start_time = time.time()
+            main.start_count_button.config(text = 'Stop',
+                fg = self.settings.red_color)
         else: 
-            self.start_time = 0
+            main.start_count_button.config(text = 'Start',
+                fg = self.settings.green_color)
 
     def _init_GPS(self):
         pass
 
     def get_pos(self):
+        return 1
+
+    def set_pos(self, position):
         pass

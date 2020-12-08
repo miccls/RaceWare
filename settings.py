@@ -8,7 +8,7 @@ class Settings:
 		# in the main class with the FULLSCREEN command.
 		self.screen_width = 1200
 		self.screen_height = 800
-		self.bg_color = '#000000' # FUTF-gul: #f1b434
+		self.bg_color = '#f1b434' # FUTF-gul: #f1b434
 		# Fixa filsökvägen där vi kör skriptet.
 		self.script_path = os.path.dirname( os.path.abspath(__file__) )
 		self.gauge_bg_color = (0,0,0)
