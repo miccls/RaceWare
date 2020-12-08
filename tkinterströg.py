@@ -89,6 +89,9 @@ class tkinterströg:
     def _init_screen(self):
 
         self.root = tk.Tk()
+        self.root.attributes('-fullscreen', True)
+        self.settings.screen_width = self.root.winfo_screenwidth()
+        self.settings.screen_height = self.root.winfo_screenheight()
         self.root.bind('<Key>', self._key_pressed)
         self.canvas = tk.Canvas(self.root,
             height = self.settings.screen_height,
