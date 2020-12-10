@@ -37,8 +37,6 @@ from tracks import Tracks
 from position import Position
 from PIL import Image, ImageTk
 import time
-import json
-import requests
 from time import sleep
 from os import sys
 from gauges import Gauges
@@ -70,8 +68,6 @@ class tkinterströg:
             'load' : 'ENGINE_LOAD'
         }
 
-        self.measurements_dict = {}
-
         # Allmän info om mätarna. Ifall det ska multipliceras med något, lägg in det 
         # i gauges - klassen. Typ if unit == '%': value *= 100.
         self.gauges_info = {
@@ -97,7 +93,7 @@ class tkinterströg:
     def _init_screen(self):
 
         self.root = tk.Tk()
-        #self.root.attributes('-fullscreen', True)
+        self.root.attributes('-fullscreen', True)
         self.settings.screen_width = self.root.winfo_screenwidth()
         self.settings.screen_height = self.root.winfo_screenheight()
         self.root.bind('<Key>', self._key_pressed)
@@ -181,21 +177,6 @@ class tkinterströg:
                 self.counting = True
         if event.char == 'q':
             sys.exit()
-
-        if event.char == 's':
-            self._send_data()
-            # Experiment för att skicka data
-
-    def _send_data(self):
-        base_url = "http://127.0.0.1:5000/"
-
-        for key, value in self.gauge_dict.items():
-            self.measurements_dict[key] = value.value
-        print(self.measurements_dict)
-        response = requests.put(base_url + "/measurements", {"data" : json.dumps(self.measurements_dict)})
-        print(response.json())
-
-
 
     def run(self):
         self._update_screen()
@@ -284,7 +265,7 @@ class tkinterströg:
                     label_text = key)
             self.gauge_dict[key].show_gauge()
         
-    # Ahhhhhhh de godis.
+        
 
 
     def _gauge_menu(self):
