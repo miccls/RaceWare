@@ -77,7 +77,7 @@ class tkinterströg:
         # i gauges - klassen. Typ if unit == '%': value *= 100.
         self.gauges_info = {
             'rpm' : {'unit' : None, 'upper_limit' : 8000},
- 			'km/h' : {'unit' : None, 'upper_limit' : None}, 
+ 			'kmh' : {'unit' : None, 'upper_limit' : None}, 
             'throttle' : {'unit' : '%', 'upper_limit' : None},
             'water' : {'unit' : '°', 'upper_limit' : 110},
             'oiltemp' : {'unit' : '°', 'upper_limit' : 180},
@@ -188,12 +188,12 @@ class tkinterströg:
             # Experiment för att skicka data
 
     def _send_data(self):
-        base_url = "http://127.0.0.1:5000/"
+        base_url = "http://192.168.1.129:5000/"
 
         for key, value in self.gauge_dict.items():
             self.measurements_dict[key] = value.value
         print(self.measurements_dict)
-        response = requests.put(base_url + "/measurements/data", {"data" : json.dumps(self.measurements_dict)})
+        response = requests.patch(base_url + "measurements/data1", self.measurements_dict)
         print(response.json())
 
 
