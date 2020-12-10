@@ -3,6 +3,7 @@
 from flask import Flask
 from flask_restful import Api, Resource, reqparse
 import json
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 api = Api(app)
@@ -35,14 +36,15 @@ class Map(Resource):
         #map_im["map"] = tk_map
 class Measurements(Resource):
     '''Klass som hanterar mätardata'''
-    def get(self):
-        return measurements
+    def get(self, message):
+        return  measurements[message], 200
 
-    def put(self):
+    def put(self, message):
         args = measurements_put_arg.parse_args()
-        measurements = json.loads(args["data"])
+        measurements[message] = json.loads(args["data"])
         print(measurements)
-        return measurements
+        # Status code 200 innebär att allt gick ok!
+        return measurements, 200
 
 
 
@@ -51,7 +53,7 @@ class Measurements(Resource):
 # name i någon metod under hello world. Som illustrerat kan man länka på fler 
 # parametrar efter varandra
 api.add_resource(Map, "/map/<string:tk_map>")
-api.add_resource(Measurements, "/measurements")
+api.add_resource(Measurements, "/measurements/<string:message>")
 
 if __name__ == "__main__":
     app.run(debug = True)

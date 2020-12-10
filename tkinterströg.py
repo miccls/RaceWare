@@ -38,6 +38,7 @@ from position import Position
 from PIL import Image, ImageTk
 import time
 import json
+import gpiozero
 import requests
 from time import sleep
 from os import sys
@@ -97,7 +98,7 @@ class tkinterströg:
     def _init_screen(self):
 
         self.root = tk.Tk()
-        self.root.attributes('-fullscreen', True)
+        #self.root.attributes('-fullscreen', True)
         self.settings.screen_width = self.root.winfo_screenwidth()
         self.settings.screen_height = self.root.winfo_screenheight()
         self.root.bind('<Key>', self._key_pressed)
@@ -192,7 +193,7 @@ class tkinterströg:
         for key, value in self.gauge_dict.items():
             self.measurements_dict[key] = value.value
         print(self.measurements_dict)
-        response = requests.put(base_url + "/measurements", {"data" : json.dumps(self.measurements_dict)})
+        response = requests.put(base_url + "/measurements/data", {"data" : json.dumps(self.measurements_dict)})
         print(response.json())
 
 
