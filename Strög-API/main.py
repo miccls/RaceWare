@@ -5,11 +5,13 @@ from flask_restful import Api, Resource, reqparse, abort, fields, marshal_with
 import json
 from flask_sqlalchemy import SQLAlchemy
 
+# Initierar APIn och databasen.
 app = Flask(__name__)
 api = Api(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 db = SQLAlchemy(app)
 
+# Skapar en modell av den data som kommer behandlas av measurements resourcen
 class MeasurementsModel(db.Model):
     id = db.Column(db.String(50), primary_key = True)
     rpm = db.Column(db.Integer)
@@ -29,7 +31,7 @@ db.create_all()
 
 measurements_put_arg = reqparse.RequestParser()
 
-# Ser till att man skciakr rätt data till class Map(): eller att man kan kräva den
+# Definierar de argument som kommer skickas till measurements.
 
 measurements_put_arg.add_argument("rpm", type=int, help = "Måste ladda upp data", required=True)
 measurements_put_arg.add_argument("kmh", type=int, help = "Måste ladda upp data", required=True)
@@ -40,6 +42,9 @@ measurements_put_arg.add_argument("load", type=int, help = "Måste ladda upp dat
 
 
 # Denna skapar ett dictionary som man kan skicka ut.
+# Vad den gör är att den översätter argumenten som kommer till 
+# följande form som är trevlig att lagra i db och att skicka till
+# dator
 resource_fields = {
     'id' : fields.String,
     'rpm' : fields.Integer,
@@ -50,37 +55,28 @@ resource_fields = {
     'load' : fields.Integer
 }
 
-# Dict som lagrar banans bild.
-map_im = {"map" : "placeholder"}
 
-
-# Skapar en resurs:
-class Map(Resource):
-    '''Testresurs: Hur hanteras requests?'''
-    def get(self, tk_map):
-        return tk_map
-
-    def put(self, tk_map):
-        args = measurements_put_arg.parse_args()
-        return {tk_map : args}
-
-        #map_im["map"] = tk_map
+# Klassen nedan sköter all dataöverföring som har med mätvärden att göra
 class Measurements(Resource):
     '''Klass som hanterar mätardata'''
     @marshal_with(resource_fields)
     def get(self, message):
+        # Hämtar världen från databasen
         result = MeasurementsModel.query.filter_by(id = message).first()
         if not result:
+            # Om id inte matchar någon data, skicka felmeddelande
             abort(404, message = "Kunde inte hitta data.")
         return  result, 200
 
 
     @marshal_with(resource_fields)
     def put(self, message):
+        # Spara argument som dict med parse_args() som också gör massa annat godis
         args = measurements_put_arg.parse_args()
         measurements = MeasurementsModel(id = message,
             rpm = args['rpm'], kmh = args['kmh'], throttle = args['throttle'],
             water = args['water'], oiltemp = args['oiltemp'], load = args['load'])
+        #Lägg till i databas
         db.session.add(measurements)    
         db.session.commit()    
         # Status code 200 innebär att allt gick ok!
@@ -91,6 +87,7 @@ class Measurements(Resource):
     def patch(self,message):
         args = measurements_put_arg.parse_args()
         result = MeasurementsModel.query.filter_by(id = message).first()
+        # Uppdaterar databas med nya värden.
         for key, value in args.items():
             setattr(result, key, value)
         db.session.commit()
@@ -105,4 +102,5 @@ api.add_resource(Map, "/map/<string:tk_map>")
 api.add_resource(Measurements, "/measurements/<string:message>")
 
 if __name__ == "__main__":
+    # Detta är min ip.
     app.run(host='192.168.1.129')  #app.run(host='0.0.0.0') app.run(debug = True) 

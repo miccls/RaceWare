@@ -188,8 +188,11 @@ class tkinterströg:
             # Experiment för att skicka data
 
     def _send_data(self):
+        '''Metod som lagrar data i databas på FLASK REST-API'''
+        # Denna används för att det är min dators lokala ip.
         base_url = "http://192.168.1.129:5000/"
-
+        # Kopierar mätarnas värden och lägger i ett dictionary som sedan
+        # skickas med id data1.
         for key, value in self.gauge_dict.items():
             self.measurements_dict[key] = value.value
         print(self.measurements_dict)
