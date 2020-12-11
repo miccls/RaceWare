@@ -134,7 +134,7 @@ class tkinterströg:
         self.root.after(20,self._check_state)
 
     def _update_screen(self):
-        if self.counting:
+        if self.counting and self.settings.in_car:
             for value in self.gauge_dict.values():
                 if value.value < 9000:
                     value.value += 20
@@ -143,6 +143,18 @@ class tkinterströg:
                 value.give_gauge_value()
             self.shiftlight.update_colors(
                 self.gauge_dict['rpm'].value)
+        elif self.counting and not self.settings.in_car:
+            # Hämtar data från enheten i bilen.
+            try: 
+                self.gauge_dict = self._get_data()
+
+                for value in self.gauge_dict.values():
+                    value.give_gauge_value()
+
+                self.shiftlight.update_colors(  
+                    self.gauge_dict['rpm'].value)
+            except:
+                pass
         # Räkna varvtid.
         try:
             if self.gps_pos.counter: 
@@ -199,6 +211,12 @@ class tkinterströg:
         response = requests.patch(base_url + "measurements/data1", self.measurements_dict)
         print(response.json())
 
+    def _get_data(self, data_type):
+        base_url = "http://192.168.1.129:5000/"
+        response = requests.get(base_url + "measurements/data1")
+        # Skickar ut data utan id.
+        del response["id"]
+        return response
 
 
     def run(self):

@@ -1,5 +1,7 @@
 import time
 import tkinter as tk
+import serial
+import pynmea2
 
 class Position:
 
@@ -8,6 +10,9 @@ class Position:
         self.master = master
         self.settings = main.settings
         # För att kunna modifiera objekt på huvudcanvasen.
+
+        # Port för seriell kommunikation med GPS - enhet.
+        self.port = self.settings.GPS_port
 
         self.counter = False
         self.start_time = 0
@@ -29,7 +34,7 @@ class Position:
         
         self.move(100,100)
 
-        self._init_GPS()
+        #self._init_GPS()
 
     def move(self, x0, y0):
         '''Flytta bilens GPS-punkt.'''
@@ -50,9 +55,18 @@ class Position:
                 fg = self.settings.green_color)
 
     def _init_GPS(self):
-        pass
+        '''Initierar GPS port vald i settings.py.'''
+        self.ser = serial.Serial(self.port, baudrate = 9600, timeout = 0.5)
+        data_out = pynmea2.NMEAStreamReader()
 
     def get_pos(self):
+    #     new_data = self.ser.readline()
+    #     while new_data[0:6] != '$GPGLL':
+    #         new_data = self.ser.readline()
+    #     new_msg = pynmea2.parse(new_data)
+    #     lat = new_msg.latitude
+    #     lon = new_msg.longitude
+    #     return lat, lon
         return 1
 
     def set_pos(self, position):

@@ -24,7 +24,11 @@ class Settings:
 		self.no_image_text = "Karta saknas."
 		self.pos_point_radius = 10
 		self.button_color = 'white'
+		self.in_car = True
 
+
+		#GPS
+		self.GPS_port = "/dev/ttyAMA0"
 
 		# Flags, alla initeras som False
 		self.track_available = False
