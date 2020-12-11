@@ -1,15 +1,9 @@
 '''
 To do:
 
-Lägg in metoder som sparar ner data som kan vara nice under loppets gång.
-Spara i CSV eller JSON, vad som än blir enklast.
-
-Fixa lite trevligare utseende. Bilder från Izabelle. Lägg in knapp för start, stopp och slut.
-Lägg också in en för safety car. Lägg dessutom in en meny där man får välja vilka mätare man vill ha 
-och vid ett val så skalas bild och frame om och de valda mätarna placeras ut.
-
-Kanske ändra framen med visare så att den är i fler rader. Då kan man kanske
-öka textstorleken samtidigt som man behåller alla mätare i skärmen.
+Inget har gjorts här riktigt. Ändra om till bilvarianten vi vill ha.
+Lägg RPM och temperatur under shiflighten. Kolla chatten om något annat. Möjligtvis varvdata i något hörn.
+Lägg in knapp för att säga till om det är safetycar. Lägg också in funktion som ger nytt varv varje gång man passerar mållinjen.
 
 -------------------------------------------------------------------------------------
 
@@ -53,7 +47,8 @@ except:
 class tkinterströg:
 
     def __init__(self):
-
+        # En inställning för att justera inställningar rätt
+        in_car = False
         # Hämtar de tillgängliga inställningarna.
         self.settings = Settings()
         # Hämtar all tillgänglig ban-info.
@@ -127,11 +122,11 @@ class tkinterströg:
             button_dict[key].pack()
     
     def _check_state(self):
-        if self.settings.track_available:
+        if self.settings.track_available and self.settings.in_car:
             self._update_pos()
         self._update_values()
         self._update_screen()
-        self.root.after(20,self._check_state)
+        self.root.after(self.settings.delay_time,self._check_state)
 
     def _update_screen(self):
         if self.counting and self.settings.in_car:
@@ -145,16 +140,15 @@ class tkinterströg:
                 self.gauge_dict['rpm'].value)
         elif self.counting and not self.settings.in_car:
             # Hämtar data från enheten i bilen.
-            try: 
-                self.gauge_dict = self._get_data()
+            temp_dict = self._get_data()
+            for key, value in temp_dict.items():
+                self.gauge_dict[key].value = value
 
-                for value in self.gauge_dict.values():
-                    value.give_gauge_value()
+            for value in self.gauge_dict.values():
+                value.give_gauge_value()
 
-                self.shiftlight.update_colors(  
-                    self.gauge_dict['rpm'].value)
-            except:
-                pass
+            self.shiftlight.update_colors(
+                self.gauge_dict['rpm'].value)
         # Räkna varvtid.
         try:
             if self.gps_pos.counter: 
@@ -209,11 +203,11 @@ class tkinterströg:
             self.measurements_dict[key] = value.value
         print(self.measurements_dict)
         response = requests.patch(base_url + "measurements/data1", self.measurements_dict)
-        print(response.json())
 
-    def _get_data(self, data_type):
+    def _get_data(self):
         base_url = "http://192.168.1.129:5000/"
         response = requests.get(base_url + "measurements/data1")
+        response = response.json()
         # Skickar ut data utan id.
         del response["id"]
         return response

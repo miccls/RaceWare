@@ -98,7 +98,7 @@ class Measurements(Resource):
 #programmet skicka världen med en get eller post, gör jag detta bör jag lägga till
 # name i någon metod under hello world. Som illustrerat kan man länka på fler 
 # parametrar efter varandra
-api.add_resource(Map, "/map/<string:tk_map>")
+
 api.add_resource(Measurements, "/measurements/<string:message>")
 
 if __name__ == "__main__":

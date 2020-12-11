@@ -2,7 +2,7 @@ import os
 
 class Settings:
 	'''Settings for the program'''
-	def __init__(self):
+	def __init__(self, in_car):
 
 		# These are defaults which get changed
 		# in the main class with the FULLSCREEN command.
@@ -16,15 +16,28 @@ class Settings:
 		self.counter = False
 		self.map_scale = 0.35
 		self.gauge_frame_width = 0.35
-		self.gauge_frame_height = 0.65
-		self.gauge_font_size = 12    #36 har jag använt från början
+		self.gauge_frame_height = 0.5
+
+		# Applikationsspecifika inställningar
+		if in_car:
+			self.delay_time = 20
+			self.gauge_font_size = 12    
+			self.timer_font_size = 40
+			self.gauge_frame_width = 0.35
+		else:
+			self.delay_time = 500
+			self.gauge_font_size = 36    
+			self.timer_font_size = 54 
+			self.gauge_frame_width = 0.35
+
+
 		self.gauge_font = "Helvetica"
-		self.timer_font_size = 40  # 54
 		self.timer_font = "Helvetica"
 		self.no_image_text = "Karta saknas."
 		self.pos_point_radius = 10
 		self.button_color = 'white'
-		self.in_car = True
+		# Ställer in refresh-tid.
+
 
 
 		#GPS
