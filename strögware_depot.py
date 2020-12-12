@@ -299,7 +299,7 @@ class tkinterströg:
                 main = self, 
                 label_text = key)
             self.lap_info_gauges[key].value = value
-            self.lap_info_gauges[key].show_gauge(row = row, column = column)
+            self.lap_info_gauges[key].show_gauge(type = 'grid',row = row, column = column)
             self.lap_info_gauges[key].give_gauge_value()
             row += 1
             if row == 4:
@@ -342,7 +342,7 @@ class tkinterströg:
                 self.gauge_dict[key] = Gauges(self.gauge_frame, 
                     main = self, 
                     label_text = key)
-            self.gauge_dict[key].show_gauge(row = row, column = column)
+            self.gauge_dict[key].show_gauge(type = 'grid', row = row, column = column)
             row += 1
             if row == 4:
                 row = 1
@@ -430,7 +430,7 @@ class tkinterströg:
                 if row == 4:
                     row = 1
                     column += 1    
-                self.gauge_dict[key].show_gauge(row = row, column = column)
+                self.gauge_dict[key].show_gauge(type = 'grid', row = row, column = column)
 
 
 

@@ -34,7 +34,9 @@ class Gauges:
 			else:
 				self.tklabel['fg'] = 'white'
 
-	def show_gauge(self, row, column):
+	def show_gauge(self, type, row=None, column=None, relx=None, rely=None, anchor=None):
 		'''Draw the gauge on the screen'''
-		self.tklabel.grid(row = row,column = column)
-
+		if type == 'grid':
+			self.tklabel.grid(row = row,column = column)
+		elif type == 'place':
+			self.tklabel.place(relx = relx, rely = rely, anchor = anchor)

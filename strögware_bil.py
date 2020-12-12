@@ -249,8 +249,8 @@ class tkinterströg:
             anchor = self.settings.gauge_anchor,)
         self.gauge_dict = {}
         # Placerar ut knappen.
-        row = 0
-        column = 0
+        rely = 0.5
+        relx = 0.25
         for key in self.gauges_info.keys():
             # Om den ska ha enhet, ge den en. Annars låt bli
             if self.gauges_info[key]['unit']:
@@ -264,9 +264,9 @@ class tkinterströg:
                     main = self, 
                     label_text = key)
             if key in self.settings.car_gauges:
-                self.gauge_dict[key].show_gauge(row = row, column = column)
-                column += 1
-                print(f"{key}, {column}")
+                self.gauge_dict[key].show_gauge(type = 'place', relx = relx, rely = rely, anchor = 'center')
+                relx += 0.25
+
         
     # Ahhhhhhh de godis.
 
