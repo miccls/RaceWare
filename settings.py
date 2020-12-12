@@ -20,7 +20,7 @@ class Settings:
 		# Applikationsspecifika inställningar
 		if in_car:
 			self.delay_time = 20
-			self.gauge_font_size = 20    
+			self.gauge_font_size = 24    
 			self.timer_font_size = 40
 			self.gauge_frame_width = 1
 			self.gauge_frame_height = 0.5
