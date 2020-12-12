@@ -122,31 +122,20 @@ class tkinterströg:
             button_dict[key].pack()
     
     def _check_state(self):
-        if self.settings.track_available and self.settings.in_car:
+        if self.settings.track_available:
             self._update_pos()
         self._update_values()
         self._update_screen()
         self.root.after(self.settings.delay_time,self._check_state)
 
     def _update_screen(self):
-        if self.counting and self.settings.in_car:
+        if self.counting:
             for value in self.gauge_dict.values():
-                if value.value < 9000:
+                if value.value < 8300:
                     value.value += 20
                 else:
                     value.value = 0
                 value.give_gauge_value()
-            self.shiftlight.update_colors(
-                self.gauge_dict['rpm'].value)
-        elif self.counting and not self.settings.in_car:
-            # Hämtar data från enheten i bilen.
-            temp_dict = self._get_data()
-            for key, value in temp_dict.items():
-                self.gauge_dict[key].value = value
-
-            for value in self.gauge_dict.values():
-                value.give_gauge_value()
-
             self.shiftlight.update_colors(
                 self.gauge_dict['rpm'].value)
         # Räkna varvtid.
@@ -219,7 +208,7 @@ class tkinterströg:
         if track in self.tracks.image_dict.keys():
             
             # Lägg ut position på kartan.
-            self.gps_pos = Position(self, self.image_canvas,)
+            self.gps_pos = Position(self, self.canvas,)
             self.settings.track_available = True
         else:
             # Det finns ingen bild, skriv ut ett meddelande på skärmen.
@@ -260,10 +249,10 @@ class tkinterströg:
             anchor = self.settings.gauge_anchor,)
         self.gauge_dict = {}
         # Placerar ut knappen.
+        row = 0
+        column = 0
         for key in self.gauges_info.keys():
             # Om den ska ha enhet, ge den en. Annars låt bli
-            row = 0
-            column = 0
             if self.gauges_info[key]['unit']:
                 self.gauge_dict[key] = Gauges(self.gauge_frame, 
                     main = self,
@@ -276,7 +265,8 @@ class tkinterströg:
                     label_text = key)
             if key in self.settings.car_gauges:
                 self.gauge_dict[key].show_gauge(row = row, column = column)
-                row +=1
+                column += 1
+                print(f"{key}, {column}")
         
     # Ahhhhhhh de godis.
 
