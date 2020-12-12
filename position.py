@@ -18,21 +18,13 @@ class Position:
         self.start_time = 0
 
         # Fixa varvtidsklockan.
-        self.lap_time_label = tk.Label(main.canvas, text = '',
+        self.lap_time_label = tk.Label(main.canvas, text = '0:0:0',
             font = (self.settings.timer_font, self.settings.timer_font_size),
             fg = 'white',
             bg = main.canvas['background'],)
         # Placerar trevligt under shiftlighten.
         self.lap_time_label.place(relx = 0.4, rely = 0.3, anchor = 'nw')
-
-        # Skapar punkten.
-        self.pointer = master.create_oval(0,
-            0,
-            self.settings.pos_point_radius,
-            self.settings.pos_point_radius,
-            fill = self.settings.red_color)
-        
-        self.move(100,100)
+    
 
         #self._init_GPS()
 
@@ -43,6 +35,15 @@ class Position:
         self.master.coords(self.pointer, x0, y0,
             x0 + self.settings.pos_point_radius,
             y0 + self.settings.pos_point_radius)
+
+    def draw_pointer(self):
+        self.pointer = self.master.create_oval(0,
+            0,
+            self.settings.pos_point_radius,
+            self.settings.pos_point_radius,
+            fill = self.settings.red_color)
+        
+        self.move(100,100)
 
     def start_count(self, main):
         self.counter = not self.counter
@@ -68,6 +69,16 @@ class Position:
     #     lon = new_msg.longitude
     #     return lat, lon
         return 1
+
+    def draw_clock(self, relative_x, relative_y, anchor):
+        # Fixa varvtidsklockan.
+        self.lap_time_label = tk.Label(self.master, text = '',
+            font = (self.settings.timer_font, self.settings.timer_font_size),
+            fg = 'white',
+            bg = self.master['background'],)
+        # Placerar trevligt under shiftlighten. relx = 0.4 rely = 0.3 anchor nw
+        self.lap_time_label.place(relx = relative_x, rely = relative_y, anchor = anchor)
+
 
     def set_pos(self, position):
         pass

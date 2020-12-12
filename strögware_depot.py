@@ -48,9 +48,9 @@ class tkinterströg:
 
     def __init__(self):
         # En inställning för att justera inställningar rätt
-        in_car = False
+        self.in_car = False
         # Hämtar de tillgängliga inställningarna.
-        self.settings = Settings(in_car)
+        self.settings = Settings(self.in_car)
         # Hämtar all tillgänglig ban-info.
         self.tracks = Tracks(self)
         # Flag för testning av programmet.
@@ -99,7 +99,7 @@ class tkinterströg:
     def _init_screen(self):
 
         self.root = tk.Tk()
-        #self.root.attributes('-fullscreen', True)
+        self.root.attributes('-fullscreen', True)
         self.settings.screen_width = self.root.winfo_screenwidth()
         self.settings.screen_height = self.root.winfo_screenheight()
         self.root.bind('<Key>', self._key_pressed)
@@ -126,35 +126,33 @@ class tkinterströg:
             height = 2,
             command = lambda track = key: self._init_track(track))   
             button_dict[key].pack()
+
+    # Funktion som löper kontinuerligt. Den har en tid efter vilken den kör.
+    # I inställningar kan man modifiera denna tid.
     
     def _check_state(self):
-        if self.settings.track_available and self.settings.in_car:
+        if self.settings.track_available and self.in_car:
             self._update_pos()
         self._update_values()
         self._update_screen()
         self.root.after(self.settings.delay_time,self._check_state)
 
     def _update_screen(self):
-        if self.counting and self.settings.in_car:
-            for value in self.gauge_dict.values():
-                if value.value < 9000:
-                    value.value += 20
-                else:
-                    value.value = 0
-                value.give_gauge_value()
-            self.shiftlight.update_colors(
-                self.gauge_dict['rpm'].value)
-        elif self.counting and not self.settings.in_car:
+        if self.counting:
             # Hämtar data från enheten i bilen.
-            temp_dict = self._get_data()
-            for key, value in temp_dict.items():
-                self.gauge_dict[key].value = value
+            try:
+                temp_dict = self._get_data()
+            except:
+                print("Anslutnings problem. Connection refused.")
+            else:
+                for key, value in temp_dict.items():
+                    self.gauge_dict[key].value = value
 
-            for value in self.gauge_dict.values():
-                value.give_gauge_value()
+                for value in self.gauge_dict.values():
+                    value.give_gauge_value()
 
-            self.shiftlight.update_colors(
-                self.gauge_dict['rpm'].value)
+                self.shiftlight.update_colors(
+                    self.gauge_dict['rpm'].value)
         # Räkna varvtid.
         try:
             if self.gps_pos.counter: 
@@ -195,8 +193,9 @@ class tkinterströg:
         if event.char == 'q':
             sys.exit()
 
-        if event.char == 's':
-            self._send_data()
+        if event.char == 'g':
+            self._update_screen()
+
             # Experiment för att skicka data
 
     def _send_data(self):
@@ -249,7 +248,9 @@ class tkinterströg:
                 anchor = 'nw', 
                 image = self.track_image)
             # Lägg ut position på kartan.
-            self.gps_pos = Position(self, self.image_canvas,)
+            self.gps_pos = Position(self, self.canvas)
+            self.gps_pos.draw_clock(0.45, 0.3, 'nw')
+            self.gps_pos.draw_pointer()
             self.settings.track_available = True
         else:
             # Det finns ingen bild, skriv ut ett meddelande på skärmen.
@@ -315,7 +316,8 @@ class tkinterströg:
         self.gauge_frame = tk.Frame(self.canvas, bg = self.canvas['background'],
             width = self.settings.screen_width * self.settings.gauge_frame_width,
             height = self.settings.screen_height * self.settings.gauge_frame_height)
-        self.gauge_frame.place(relx = 0.05, rely = 0.05, anchor = 'nw',)
+        self.gauge_frame.place(relx = self.settings.gauge_pos_x, rely = self.settings.gauge_pos_y, 
+            anchor = self.settings.gauge_anchor,)
         self.gauge_dict = {}
         # Lägger till knapp för att ändra mätare.
         self.gauge_button = tk.Button(self.gauge_frame,
@@ -356,23 +358,32 @@ class tkinterströg:
         for gauge in self.gauge_dict.values():
             gauge.tklabel.destroy()
             del gauge
+        # Placera högst upp i framen.
         tk.Label(self.gauge_frame, text = "Välj mätare: ",
             bg = self.canvas['background'],
             fg = 'white',
             font = (self.settings.gauge_font,
-				self.settings.gauge_font_size,)).pack()
+				self.settings.gauge_font_size,)).grid(row = 0, column = 0)
         # Sätt ut valmöjligheter
         self.check_box_dict = {}
         self.check_box_variables = {}
         count = 1
+        row = 0
+        column = 0
         for key in self.gauges_info.keys():
+            # För att placera ut i kolumner om 3 element.
+            row += 1
+            if row == 4:
+                row = 1
+                column += 1
             self.check_box_variables[key] = tk.BooleanVar()
             self.check_box_dict[key] = tk.Checkbutton(self.gauge_frame, text = key.title(),
                 takefocus = 0, variable = self.check_box_variables[key],
                 bg = self.canvas['background'], fg = '#ffffff',
                 height = 2, width = 15,
                 font = (self.settings.gauge_font, self.settings.gauge_font_size))
-            self.check_box_dict[key].pack()
+            self.check_box_dict[key].grid(row = row, column = column)
+            
             count += 1  # Fortsätt här, knapparna ska ut och längst ner ska knapp som säger välj, när den trycks så gå vidare.
         # Knapp för att bekräfta val
         self.confirm = False
@@ -382,7 +393,7 @@ class tkinterströg:
             width = 10,
             height = 2,
             command = (lambda: self._confirm()))
-        self.confirm_button.pack()
+        self.confirm_button.grid(row = row + 1, column = column)
 
     def _confirm(self):
         # Vad som ska hända när knappen är tryckt.
@@ -397,8 +408,10 @@ class tkinterströg:
             width = 10,
             height = 2,
             command = lambda: self._gauge_menu())
-        self.gauge_button.pack()
 
+        self.gauge_button.grid(row = 0, column = 0)
+        row = 1
+        column = 0
         for key in self.gauges_info.keys():
             # Om den ska ha enhet, ge den en. Annars låt bli
             if self.gauges_info[key]['unit']:
@@ -411,8 +424,13 @@ class tkinterströg:
                 self.gauge_dict[key] = Gauges(self.gauge_frame, 
                     main = self, 
                     label_text = key)
-            if self.check_box_variables[key].get():        
-                self.gauge_dict[key].show_gauge()
+
+            if self.check_box_variables[key].get():    
+                row += 1
+                if row == 4:
+                    row = 1
+                    column += 1    
+                self.gauge_dict[key].show_gauge(row = row, column = column)
 
 
 

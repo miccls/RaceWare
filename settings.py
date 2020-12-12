@@ -15,20 +15,28 @@ class Settings:
 		self.space = -30 # Mimic the push of a spacebar in images
 		self.counter = False
 		self.map_scale = 0.35
-		self.gauge_frame_width = 0.35
-		self.gauge_frame_height = 0.5
+		self.car_gauges = ['rpm', 'water', 'oiltemp']
 
 		# Applikationsspecifika inställningar
 		if in_car:
 			self.delay_time = 20
 			self.gauge_font_size = 12    
 			self.timer_font_size = 40
-			self.gauge_frame_width = 0.35
+			self.gauge_frame_width = 1
+			self.gauge_frame_height = 0.5
+			self.gauge_pos_x = 0.5
+			self.gauge_pos_y = 0.75
+			self.gauge_anchor = 'center'
+
 		else:
 			self.delay_time = 500
 			self.gauge_font_size = 36    
 			self.timer_font_size = 54 
 			self.gauge_frame_width = 0.35
+			self.gauge_frame_height = 0.5
+			self.gauge_pos_x = 0.05
+			self.gauge_pos_y = 0.25
+			self.gauge_anchor = 'nw'
 
 
 		self.gauge_font = "Helvetica"

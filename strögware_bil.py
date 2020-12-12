@@ -48,9 +48,9 @@ class tkinterströg:
 
     def __init__(self):
         # En inställning för att justera inställningar rätt
-        in_car = False
+        in_car = True
         # Hämtar de tillgängliga inställningarna.
-        self.settings = Settings()
+        self.settings = Settings(in_car)
         # Hämtar all tillgänglig ban-info.
         self.tracks = Tracks(self)
         # Flag för testning av programmet.
@@ -93,7 +93,7 @@ class tkinterströg:
     def _init_screen(self):
 
         self.root = tk.Tk()
-        #self.root.attributes('-fullscreen', True)
+        self.root.attributes('-fullscreen', True)
         self.settings.screen_width = self.root.winfo_screenwidth()
         self.settings.screen_height = self.root.winfo_screenheight()
         self.root.bind('<Key>', self._key_pressed)
@@ -204,14 +204,6 @@ class tkinterströg:
         print(self.measurements_dict)
         response = requests.patch(base_url + "measurements/data1", self.measurements_dict)
 
-    def _get_data(self):
-        base_url = "http://192.168.1.129:5000/"
-        response = requests.get(base_url + "measurements/data1")
-        response = response.json()
-        # Skickar ut data utan id.
-        del response["id"]
-        return response
-
 
     def run(self):
         self._update_screen()
@@ -225,23 +217,7 @@ class tkinterströg:
         self.track_dict = self.tracks.tracks_dict[track]
 
         if track in self.tracks.image_dict.keys():
-            #Sätt bildflaggan till true.
-            self.track_image = self.tracks.get_image(track)
-            self.image_canvas = tk.Canvas(self.canvas,
-                height = self.track_image.height(),
-                width = self.track_image.width(),
-                bg = self.canvas['background'],
-                highlightthickness=0)  # Fixa denna canvas så man kan lägga in en punkt.
-            self.image_canvas.place(
-                x=self.settings.screen_width * 0.75,
-                y=self.settings.screen_height * 0.75,
-                anchor = 'center',
-                )
-            self.image_canvas.create_image(
-                0,
-                0,
-                anchor = 'nw', 
-                image = self.track_image)
+            
             # Lägg ut position på kartan.
             self.gps_pos = Position(self, self.image_canvas,)
             self.settings.track_available = True
@@ -256,11 +232,9 @@ class tkinterströg:
                 y=self.settings.screen_height * 0.75,
                 anchor = 'center',)
 
-        # Fixa countknappen, det gör jag hellre här än i positionklassen
-
         self.start_count_button = tk.Button(self.canvas, text = "Start", 
             fg = self.settings.green_color, 
-            command = lambda x = self: self.gps_pos.start_count(x))
+            command = lambda: self._toggle_measurements()) 
         # rely = 0.15 linjerar i överkant med shiftlighten.
         self.start_count_button.place(relx = 0.9, rely = 0.15, anchor = 'ne')
 
@@ -269,25 +243,27 @@ class tkinterströg:
         self.shiftlight = Shiftlight(self, self.canvas)
         self._check_state()
 
+    def _toggle_measurements(self):
+        self.gps_pos.start_count(self)
+        if self.counting:
+                self.counting = False
+        else:
+            self.counting = True
+        
 
     def _init_gauges(self):
         ''' Lägger ut mätarna på skärmen '''
         self.gauge_frame = tk.Frame(self.canvas, bg = self.canvas['background'],
             width = self.settings.screen_width * self.settings.gauge_frame_width,
             height = self.settings.screen_height * self.settings.gauge_frame_height)
-        self.gauge_frame.place(relx = 0.05, rely = 0.25, anchor = 'nw',)
+        self.gauge_frame.place(relx = self.settings.gauge_pos_x, rely = self.settings.gauge_pos_y, 
+            anchor = self.settings.gauge_anchor,)
         self.gauge_dict = {}
-        # Lägger till knapp för att ändra mätare.
-        self.gauge_button = tk.Button(self.gauge_frame,
-            bg = self.settings.button_color, highlightcolor = self.settings.button_color,
-            text = 'Ändra',
-            width = 10,
-            height = 2,
-            command = lambda: self._gauge_menu())
         # Placerar ut knappen.
-        self.gauge_button.pack()
         for key in self.gauges_info.keys():
             # Om den ska ha enhet, ge den en. Annars låt bli
+            row = 0
+            column = 0
             if self.gauges_info[key]['unit']:
                 self.gauge_dict[key] = Gauges(self.gauge_frame, 
                     main = self,
@@ -298,85 +274,11 @@ class tkinterströg:
                 self.gauge_dict[key] = Gauges(self.gauge_frame, 
                     main = self, 
                     label_text = key)
-            self.gauge_dict[key].show_gauge()
+            if key in self.settings.car_gauges:
+                self.gauge_dict[key].show_gauge(row = row, column = column)
+                row +=1
         
     # Ahhhhhhh de godis.
-
-
-    def _gauge_menu(self):
-        '''Meny för att välja vilka mätare som ska visas.'''
-        for widget in self.gauge_frame.winfo_children():
-            widget.destroy()
-        for gauge in self.gauge_dict.values():
-            gauge.tklabel.destroy()
-            del gauge
-        tk.Label(self.gauge_frame, text = "Välj mätare: ",
-            bg = self.canvas['background'],
-            fg = 'white',
-            font = (self.settings.gauge_font,
-				self.settings.gauge_font_size,)).pack()
-        # Sätt ut valmöjligheter
-        self.check_box_dict = {}
-        self.check_box_variables = {}
-        count = 1
-        for key in self.gauges_info.keys():
-            self.check_box_variables[key] = tk.BooleanVar()
-            self.check_box_dict[key] = tk.Checkbutton(self.gauge_frame, text = key.title(),
-                takefocus = 0, variable = self.check_box_variables[key],
-                bg = self.canvas['background'], fg = '#ffffff',
-                height = 2, width = 15,
-                font = (self.settings.gauge_font, self.settings.gauge_font_size))
-            self.check_box_dict[key].pack()
-            count += 1  # Fortsätt här, knapparna ska ut och längst ner ska knapp som säger välj, när den trycks så gå vidare.
-        # Knapp för att bekräfta val
-        self.confirm = False
-        self.confirm_button = tk.Button(self.gauge_frame,
-            bg = self.settings.button_color, highlightcolor = '#ffffff',
-            text = 'Bekräfta',
-            width = 10,
-            height = 2,
-            command = (lambda: self._confirm()))
-        self.confirm_button.pack()
-
-    def _confirm(self):
-        # Vad som ska hända när knappen är tryckt.
-        for widget in self.gauge_frame.winfo_children():
-            widget.destroy()
-        for key in self.check_box_dict.keys():
-            self.check_box_dict[key].destroy()
-        # Lägg ut ny knapp.
-        self.gauge_button = tk.Button(self.gauge_frame,
-            bg = '#000000', highlightcolor = '#ffffff',
-            text = 'Ändra',
-            width = 10,
-            height = 2,
-            command = lambda: self._gauge_menu())
-        self.gauge_button.pack()
-
-        for key in self.gauges_info.keys():
-            # Om den ska ha enhet, ge den en. Annars låt bli
-            if self.gauges_info[key]['unit']:
-                self.gauge_dict[key] = Gauges(self.gauge_frame, 
-                    main = self,
-                    label_text = key,
-                    unit = self.gauges_info[key]['unit'],
-                    upper_limit = self.gauges_info[key]['upper_limit'])
-            else:
-                self.gauge_dict[key] = Gauges(self.gauge_frame, 
-                    main = self, 
-                    label_text = key)
-            if self.check_box_variables[key].get():        
-                self.gauge_dict[key].show_gauge()
-
-
-
-        
-            
-
-        # Funktion som uppdaterar värden.
-        if self.settings.obd_active:
-            self._update_values()
-
 
     def _update_values(self):
         # Lagra uppdatera värden i gauges.
