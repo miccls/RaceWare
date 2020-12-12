@@ -144,15 +144,11 @@ class tkinterströg:
                 value.give_gauge_value()
             self.shiftlight.update_colors(
                 self.gauge_dict['rpm'].value)
-        # Räkna varvtid.
-        try:
-            if self.gps_pos.counter: 
+        # Räkna varvtid. 
              # Kolla här så att allt är ok.
              # Se till så att _format_time används i 
              # _update_pos()!
-                self._update_pos()
-        except AttributeError:
-            pass 
+        self._update_pos()
 
 
     def _format_time(self):
@@ -171,8 +167,11 @@ class tkinterströg:
     def _update_pos(self):
         '''Uppdaterar punkten på kartan'''
         # Nästa steg är att nolla den när man ser att det funkar.
-        if self.gps_pos.counter:
-            self.gps_pos.lap_time_label.config(text = self._format_time())
+        try:
+            if self.gps_pos.counter:
+                self.gps_pos.lap_time_label.config(text = self._format_time())
+        except AttributeError:
+            pass
 
     def _key_pressed(self, event):
         print(event.char)
@@ -215,6 +214,7 @@ class tkinterströg:
             
             # Lägg ut position på kartan.
             self.gps_pos = Position(self, self.canvas,)
+            self.gps_pos.draw_clock(0.45, 0.3, 'nw')
             self.settings.track_available = True
         else:
             # Det finns ingen bild, skriv ut ett meddelande på skärmen.
