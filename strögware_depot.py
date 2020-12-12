@@ -151,8 +151,6 @@ class tkinterströg:
                 for value in self.gauge_dict.values():
                     value.give_gauge_value()
 
-                self.shiftlight.update_colors(
-                    self.gauge_dict['rpm'].value)
         # Räkna varvtid.
         try:
             if self.gps_pos.counter: 

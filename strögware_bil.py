@@ -55,7 +55,7 @@ class tkinterströg:
         self.tracks = Tracks(self)
         # Flag för testning av programmet.
         self.counting = False
-
+        self.update_counter = 0
         # Kommandon som bilen ska läsa.
         self.command_list = {
     	    'rpm' : 'RPM',
@@ -126,10 +126,16 @@ class tkinterströg:
             self._update_pos()
         self._update_values()
         self._update_screen()
+        if self.update_counter == 15:
+            try:
+                self._send_data()
+            except: 
+                print("Ingen anslutning")
         self.root.after(self.settings.delay_time,self._check_state)
 
     def _update_screen(self):
         if self.counting:
+            self.update_counter += 1
             for value in self.gauge_dict.values():
                 if value.value < 8300:
                     value.value += 20
