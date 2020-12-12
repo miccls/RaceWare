@@ -1,9 +1,11 @@
 '''
 To do:
 
-Inget har gjorts här riktigt. Ändra om till bilvarianten vi vill ha.
-Lägg RPM och temperatur under shiflighten. Kolla chatten om något annat. Möjligtvis varvdata i något hörn.
-Lägg in knapp för att säga till om det är safetycar. Lägg också in funktion som ger nytt varv varje gång man passerar mållinjen.
+Fixa GPS info så att man vet när man kört ett varv, lagra detta i en dict som man sedan kan skicka över med 
+allt annat godis. Denna dict ska innehålla den info som syns i depot varianten. Lagra i JSON och spara även ner 
+en kopia av denna när man stänger ner programmet. Både när man trycker på q och när man trycker på stop. Kolla om det 
+redan finns en och om det gör det, byt namn och spara sedan. Gör även en .py fil som samlar depot och bil-varianterna
+och frågar vilken man vill köra. 
 
 -------------------------------------------------------------------------------------
 
@@ -126,7 +128,7 @@ class tkinterströg:
             self._update_pos()
         self._update_values()
         self._update_screen()
-        if self.update_counter == 15:
+        if self.update_counter >= 15:
             try:
                 self._send_data()
             except: 
@@ -214,7 +216,7 @@ class tkinterströg:
             
             # Lägg ut position på kartan.
             self.gps_pos = Position(self, self.canvas,)
-            self.gps_pos.draw_clock(0.45, 0.3, 'nw')
+            self.gps_pos.draw_clock(0.40, 0.3, 'nw')
             self.settings.track_available = True
         else:
             # Det finns ingen bild, skriv ut ett meddelande på skärmen.

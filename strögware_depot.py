@@ -1,10 +1,7 @@
 '''
 To do:
 
-Lägg in alla grafiska element som kan vara bra. Nu är mätarvärden och varvtidsdata inne.
-Kanske ha med genomsnittsdata eller liknande. Annars: Fixa om kartan så att den är i fokus.
-Lägg den mot mitten och lös överföring av gpsdata via APIN från bilen hit.
-
+Sätt lap_time-labeln i samma frame som den andra lap-datan.
 -------------------------------------------------------------------------------------
 
 För medlemmar i storströgarna som är inne på sightseeing::
