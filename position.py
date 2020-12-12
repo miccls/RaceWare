@@ -17,15 +17,7 @@ class Position:
         self.counter = False
         self.start_time = 0
 
-        # Fixa varvtidsklockan.
-        self.lap_time_label = tk.Label(main.canvas, text = '0:0:0',
-            font = (self.settings.timer_font, self.settings.timer_font_size),
-            fg = 'white',
-            bg = main.canvas['background'],)
-        # Placerar trevligt under shiftlighten.
-        self.lap_time_label.place(relx = 0.4, rely = 0.3, anchor = 'nw')
     
-
         #self._init_GPS()
 
     def move(self, x0, y0):
@@ -72,7 +64,7 @@ class Position:
 
     def draw_clock(self, relative_x, relative_y, anchor):
         # Fixa varvtidsklockan.
-        self.lap_time_label = tk.Label(self.master, text = '',
+        self.lap_time_label = tk.Label(self.master, text = '0:0:0',
             font = (self.settings.timer_font, self.settings.timer_font_size),
             fg = 'white',
             bg = self.master['background'],)

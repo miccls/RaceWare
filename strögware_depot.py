@@ -181,6 +181,13 @@ class tkinterströg:
         if self.gps_pos.counter:
             self.gps_pos.lap_time_label.config(text = self._format_time())
 
+    def _toggle_measurements(self):
+        self.gps_pos.start_count(self)
+        if self.counting:
+                self.counting = False
+        else:
+            self.counting = True
+
     def _key_pressed(self, event):
         print(event.char)
         if event.char == 'c':
@@ -267,7 +274,7 @@ class tkinterströg:
 
         self.start_count_button = tk.Button(self.canvas, text = "Start", 
             fg = self.settings.green_color, 
-            command = lambda x = self: self.gps_pos.start_count(x))
+            command = lambda:  self._toggle_measurements())
         # rely = 0.15 linjerar i överkant med shiftlighten.
         self.start_count_button.place(relx = 0.9, rely = 0.15, anchor = 'ne')
 
