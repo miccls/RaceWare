@@ -94,6 +94,7 @@ class strögware_bil:
         # skärmen och startförhållanden.
         self._init_screen()
         requests.put(self.settings.base_url + "location/gps", {"lat" : 0, "lon" : 0})
+        requests.put(self.settings.base_url + "location/gps", {'rpm' : 0,'kmh' : 0,'throttle' : 0,'water' : 0,'oiltemp' : 0,'load' : 0})
 
 
     def _init_screen(self):
