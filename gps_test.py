@@ -33,3 +33,13 @@ def decode(coord):
     #print(full)
     
     return full
+
+ser = serial.Serial(mport,9600,timeout = 2)
+
+while True:
+    try:
+        dat = ser.readline().decode()
+        mylat, mylon = parseGPS(dat)
+        print("Latitud: ", mylat , "   Longitud: " , mylon,"\n--------------")
+    except:
+        pass

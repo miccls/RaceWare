@@ -99,7 +99,7 @@ class strögware_bil:
     def _init_screen(self):
 
         self.root = tk.Tk()
-        self.root.attributes('-fullscreen', True)
+        self.root.attributes('-fullscreen', self.settings.fullscreen)
         self.settings.screen_width = self.root.winfo_screenwidth()
         self.settings.screen_height = self.root.winfo_screenheight()
         self.root.bind('<Key>', self._key_pressed)
@@ -232,6 +232,7 @@ class strögware_bil:
             # Lägg ut position på kartan.
             self.gps_pos = Position(self, self.canvas,)
             self.gps_pos.draw_clock(0.40, 0.3, 'nw')
+            self.gps_pos.init_GPS()
             self.settings.track_available = True
         else:
             # Det finns ingen bild, skriv ut ett meddelande på skärmen.

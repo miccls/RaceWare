@@ -47,17 +47,25 @@ class Position:
             main.start_count_button.config(text = 'Start',
                 fg = self.settings.green_color)
 
-    def _init_GPS(self):
+    def init_GPS(self):
         '''Initierar GPS port vald i settings.py.'''
+        mport = "/dev/ttyAMA0"
         self.ser = serial.Serial(mport,9600,timeout = 1)
 
     def get_pos(self):
-        try:
-            data = ser.readline().decode()
-            return self._parseGPS(data)
+        new_data = False
+        # Om vi lyckats läsa data
+        while not new_data:
+            try:
+                data = self.ser.readline().decode()
+            except:
+                pass
+            else:
+                new_data = True
 
-        except:
-            pass
+        lat, lon = self._parseGPS(data)
+        print(lat,lon)
+        return lat, lon
 
 
     def draw_clock(self, relative_x, relative_y, anchor):
