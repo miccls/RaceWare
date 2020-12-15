@@ -26,8 +26,8 @@ class MeasurementsModel(db.Model):
 
 class LocationModel(db.Model):
     id = db.Column(db.String(50), primary_key = True)
-    rpm = db.Column(db.Float)
-    kmh = db.Column(db.Float)
+    lat = db.Column(db.Float)
+    lon = db.Column(db.Float)
     
     def __repr__(self):
         return f"ID = {id}"
@@ -51,7 +51,7 @@ measurements_put_arg.add_argument("load", type=int, help = "Måste ladda upp dat
 
 # Definierar de argument som kommer skickas till Location.
 location_put_arg.add_argument("lat", type = float, help = "Latituddata skickas här", required = True)
-location_put_arg.add_argument("lat", type = float, help = "Longituddata skickas här", required = True)
+location_put_arg.add_argument("lon", type = float, help = "Longituddata skickas här", required = True)
 
 
 # Denna skapar ett dictionary som man kan skicka ut.
@@ -130,8 +130,8 @@ class Location(Resource):
 
     @marshal_with(gps_resource_field)
     def patch(self, message):
-        args = measurements_put_arg.parse_args()
-        result = MeasurementsModel.query.filter_by(id = message).first()
+        args = location_put_arg.parse_args()
+        result = LocationModel.query.filter_by(id = message).first()
         # Uppdaterar databas med nya värden.
         for key, value in args.items():
             setattr(result, key, value)
@@ -140,14 +140,15 @@ class Location(Resource):
 
     @marshal_with(gps_resource_field)
     def put(self, message):
-        args = measurements_put_arg.parse_args()
-        measurements = MeasurementsModel(id = message,
+        args = location_put_arg.parse_args()
+        gps_data = LocationModel(id = message,
             lat = args['lat'], lon = args['lon'])
+        print(args)
         #Lägg till i databas
-        db.session.add(measurements)    
+        db.session.add(gps_data)    
         db.session.commit()    
         # Status code 200 innebär att allt gick ok!
-        return measurements, 200
+        return gps_data, 200
 
 
 

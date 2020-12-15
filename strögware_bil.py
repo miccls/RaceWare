@@ -177,6 +177,7 @@ class strögware_bil:
             if self.gps_pos.counter:
                 lat, lon = self.gps_pos.get_pos()
                 self.gps_data = {"lat" : lat, "lon" : lon}
+                self._send_data('gps_data')
         except:
             pass
 
@@ -191,7 +192,7 @@ class strögware_bil:
             sys.exit()
 
         if event.char == 's':
-            self._send_data()
+            self._send_data('gauge_data')
             # Experiment för att skicka data
 
     def _send_data(self, measurement):
