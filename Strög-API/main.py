@@ -140,13 +140,17 @@ class Location(Resource):
 
     @marshal_with(gps_resource_field)
     def put(self, message):
+
         args = location_put_arg.parse_args()
         gps_data = LocationModel(id = message,
             lat = args['lat'], lon = args['lon'])
         print(args)
         #Lägg till i databas
-        db.session.add(gps_data)    
-        db.session.commit()    
+        try:
+            db.session.add(gps_data)    
+            db.session.commit()
+        except:
+            return 500 
         # Status code 200 innebär att allt gick ok!
         return gps_data, 200
 
