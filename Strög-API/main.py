@@ -24,12 +24,21 @@ class MeasurementsModel(db.Model):
     def __repr__(self):
         return f"rpm = {rpm}"
 
+class LocationModel(db.Model):
+    id = db.Column(db.String(50), primary_key = True)
+    rpm = db.Column(db.Float)
+    kmh = db.Column(db.Float)
+    
+    def __repr__(self):
+        return f"ID = {id}"
+
 
 db.create_all()
 
 
 
 measurements_put_arg = reqparse.RequestParser()
+location_put_arg = reqparse.RequestParser()
 
 # Definierar de argument som kommer skickas till measurements.
 
@@ -39,6 +48,10 @@ measurements_put_arg.add_argument("throttle", type=int, help = "Måste ladda upp
 measurements_put_arg.add_argument("water", type=int, help = "Måste ladda upp data", required=True)
 measurements_put_arg.add_argument("oiltemp", type=int, help = "Måste ladda upp data", required=True)
 measurements_put_arg.add_argument("load", type=int, help = "Måste ladda upp data", required=True)
+
+# Definierar de argument som kommer skickas till Location.
+location_put_arg.add_argument("lat", type = float, help = "Latituddata skickas här", required = True)
+location_put_arg.add_argument("lat", type = float, help = "Longituddata skickas här", required = True)
 
 
 # Denna skapar ett dictionary som man kan skicka ut.
@@ -53,6 +66,12 @@ resource_fields = {
     'water' : fields.Integer,
     'oiltemp' : fields.Integer,
     'load' : fields.Integer
+}
+
+gps_resource_field = {
+    "id" : fields.String,
+    "lat" : fields.Float,
+    "lon" : fields.Float
 }
 
 
@@ -98,6 +117,40 @@ class TestConnection(Resource):
     def get(self):
         return {'answer' : 'Ansluten'}
 
+class Location(Resource):
+    ''' Resource som skickar gps koordinater '''
+    @marshal_with(gps_resource_field)
+    def get(self, message):
+        # Hämtar världen från databasen
+        result = LocationModel.query.filter_by(id = message).first()
+        if not result:
+            # Om id inte matchar någon data, skicka felmeddelande
+            abort(404, message = "Kunde inte hitta data.")
+        return  result, 200
+
+    @marshal_with(gps_resource_field)
+    def patch(self, message):
+        args = measurements_put_arg.parse_args()
+        result = MeasurementsModel.query.filter_by(id = message).first()
+        # Uppdaterar databas med nya värden.
+        for key, value in args.items():
+            setattr(result, key, value)
+        db.session.commit()
+        return result
+
+    @marshal_with(gps_resource_field)
+    def put(self, message):
+        args = measurements_put_arg.parse_args()
+        measurements = MeasurementsModel(id = message,
+            lat = args['lat'], lon = args['lon'])
+        #Lägg till i databas
+        db.session.add(measurements)    
+        db.session.commit()    
+        # Status code 200 innebär att allt gick ok!
+        return measurements, 200
+
+
+
 #Vad <string:name> name säger är att det är så man låter användare eller
 #programmet skicka världen med en get eller post, gör jag detta bör jag lägga till
 # name i någon metod under hello world. Som illustrerat kan man länka på fler 
@@ -105,6 +158,7 @@ class TestConnection(Resource):
 
 api.add_resource(Measurements, "/measurements/<string:message>")
 api.add_resource(TestConnection, "/testconnection")
+api.add_resource(Location, "/location/<string:message>")
 
 if __name__ == "__main__":
     # Detta är min ip.

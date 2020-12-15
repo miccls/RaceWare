@@ -93,6 +93,7 @@ class strögware_bil:
         # Använder Tkiner för att ställa in 
         # skärmen och startförhållanden.
         self._init_screen()
+        requests.put(self.settings.base_url + "location/gps", {"lat" : 0, "lon" : 0})
 
 
     def _init_screen(self):
@@ -174,8 +175,9 @@ class strögware_bil:
         # Nästa steg är att nolla den när man ser att det funkar.
         try:
             if self.gps_pos.counter:
-                self.gps_pos.lap_time_label.config(text = self._format_time())
-        except AttributeError:
+                lat, lon = self.gps_pos.get_pos()
+                self.gps_data = {"lat" : lat, "lon" : lon}
+        except:
             pass
 
     def _key_pressed(self, event):
@@ -192,16 +194,20 @@ class strögware_bil:
             self._send_data()
             # Experiment för att skicka data
 
-    def _send_data(self):
+    def _send_data(self, measurement):
         '''Metod som lagrar data i databas på FLASK REST-API'''
         # Denna används för att det är min dators lokala ip.
         base_url = "http://192.168.1.129:5000/"
         # Kopierar mätarnas värden och lägger i ett dictionary som sedan
         # skickas med id data1.
-        for key, value in self.gauge_dict.items():
-            self.measurements_dict[key] = value.value
-        print(self.measurements_dict)
-        response = requests.patch(base_url + "measurements/data1", self.measurements_dict)
+        if measurement == 'gauge_data':
+            for key, value in self.gauge_dict.items():
+                self.measurements_dict[key] = value.value
+            print(self.measurements_dict)
+            response = requests.patch(base_url + "measurements/data1", self.measurements_dict)
+        elif measurement == 'gps_data':
+            response = requests.patch(base_url + "location/gps", self.gps_data)
+            print(response)
 
 
     def run(self):
