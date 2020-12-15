@@ -58,12 +58,11 @@ class Position:
         while not new_data:
             try:
                 data = self.ser.readline().decode()
+                lat, lon = self._parseGPS(data)
             except:
                 pass
             else:
                 new_data = True
-
-        lat, lon = self._parseGPS(data)
         print(lat,lon)
         return lat, lon
 
@@ -85,7 +84,7 @@ class Position:
         if data[0:6] == "$GPGGA":
             s = data.split(",")
             if s[7] == '0' or s[7]=='00':
-                print ("no satellite data available")
+                print("no satellite data available")
                 return
             lat = self._decode(s[2])
             lon = self._decode(s[4])
