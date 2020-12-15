@@ -40,15 +40,18 @@ from time import sleep
 from os import sys
 from gauges import Gauges
 from shiftlight import Shiftlight
+from rich.traceback import install
 # Tills jag vet att allt fungerar.
 try:
     from obd_com import OBDII
 except:
     pass
 
-class tkinterströg:
+class strögware_bil:
 
     def __init__(self):
+        # Ett test av rich:s felhantering konsollmanipulering
+        install()
         # En inställning för att justera inställningar rätt
         in_car = True
         # Hämtar de tillgängliga inställningarna.
@@ -295,6 +298,6 @@ class tkinterströg:
 
 
 if __name__ == '__main__':
-    strög = tkinterströg()
+    strög = strögware_bil()
     strög.run()
 

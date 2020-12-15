@@ -2,6 +2,8 @@
 To do:
 
 Sätt lap_time-labeln i samma frame som den andra lap-datan.
+
+Fixa även en label som beskriver de olika framesen till mätare och varvdata.
 -------------------------------------------------------------------------------------
 
 För medlemmar i storströgarna som är inne på sightseeing::
@@ -22,6 +24,7 @@ som än så länge är rödmarkerat kan man bara ignorera.
 
 
 import tkinter as tk
+from tkinter import messagebox
 import tkinter.ttk as ttk
 from settings import Settings
 from tracks import Tracks
@@ -34,16 +37,20 @@ import requests
 from time import sleep
 from os import sys
 from gauges import Gauges
-from shiftlight import Shiftlight
+from rich.traceback import install
+from rich.console import Console
 # Tills jag vet att allt fungerar.
-try:
-    from obd_com import OBDII
-except:
-    pass
 
-class tkinterströg:
+from obd_com import OBDII
+
+
+class strögware_depot:
 
     def __init__(self):
+        # Ett test av rich:s felhantering konsollmanipulering
+        install()
+        # Initerar en Console instans för att skriva ut finare meddelanden i terminalen.
+        self.console = Console()
         # En inställning för att justera inställningar rätt
         self.in_car = False
         # Hämtar de tillgängliga inställningarna.
@@ -52,6 +59,7 @@ class tkinterströg:
         self.tracks = Tracks(self)
         # Flag för testning av programmet.
         self.counting = False
+        
         # Kommandon som bilen ska läsa.
         self.command_list = {
     	    'rpm' : 'RPM',
@@ -88,17 +96,44 @@ class tkinterströg:
             'bästa' : 'N/A',
             }
 
-        # Använder Tkiner för att ställa in 
-        # skärmen och startförhållanden.
         self._init_screen()
+        #Testa anslutning till api.
+        self._test_connection()
+
+    def _test_connection(self):
+        try:
+            answer = self._send_data("/testconnection",)
+        
+            if answer['answer'] == "Ansluten":
+                greeting_string = "Anslutning lyckad!"
+                self.console.print("[bold green]"+ greeting_string + "\n" + "-"*len(greeting_string))
+                self.connected = True
+                messagebox.showinfo("Anslutning", "Ansluten till API")
+                sleep(0.5) # För att låta fönstret skapas i operativsystemet
+            else:
+                fail_string = "Fel svar från API"
+                self.console.print("[bold red]"+ fail_string + "\n" + "-"*len(fail_string))
+                self.connected = False
+                messagebox.showinfo("Anslutning", "Ej ansluten till API")
+                sleep(0.5) # För att låta fönstret skapas i operativsystemet
+        except:
+                fail_string = "Anslutning misslyckad."
+                self.console.print("[bold red]"+ fail_string + "\n" + "-"*len(fail_string))
+                self.connected = False
+                messagebox.showinfo("Anslutning", "Ej ansluten till API")
+                sleep(0.5) # För att låta fönstret skapas i operativsystemet
 
 
     def _init_screen(self):
 
         self.root = tk.Tk()
-        self.root.attributes('-fullscreen', True)
-        self.settings.screen_width = self.root.winfo_screenwidth()
-        self.settings.screen_height = self.root.winfo_screenheight()
+        # Lägger till meny högst upp precis som alla program har.
+        # Tanken är att denna ska kunna användas för diverse inställningar och kommandon.
+        self._init_menu()
+        self.root.attributes('-fullscreen', self.settings.fullscreen)
+        if self.settings.fullscreen:
+            self.settings.screen_width = self.root.winfo_screenwidth()
+            self.settings.screen_height = self.root.winfo_screenheight()
         self.root.bind('<Key>', self._key_pressed)
         self.canvas = tk.Canvas(self.root,
             height = self.settings.screen_height,
@@ -124,6 +159,30 @@ class tkinterströg:
             command = lambda track = key: self._init_track(track))   
             button_dict[key].pack()
 
+
+    def _init_menu(self):
+        '''Ställer in menylisten högst upp'''
+        # Ger ett mer professionellt intryck.
+        self.menu_bar = tk.Menu(self.root)
+        self.root.config(menu = self.menu_bar)
+        file_menu = tk.Menu(self.menu_bar)
+        settings_menu = tk.Menu(self.menu_bar)
+        save_menu = tk.Menu(self.menu_bar)
+        self.menu_bar.add_cascade(label = 'Fil', menu = file_menu)
+        file_menu.add_cascade(label = 'Spara', menu = save_menu)
+        self.menu_bar.add_cascade(label = 'Inställningar', menu = settings_menu)
+        # Flytta detta till en metod som skapar ett fönster där man får ange önskat värde.
+        # Denna metod kan lämpligen ligga i settings.
+        settings_menu.add_command(label = 'Uppdateringstid', command = lambda x = 'delay_time', 
+            t = 10: self.settings.set(x, self.canvas, unit = "ms", label = 'Uppdateringstid'))
+        settings_menu.add_command(label = 'Återanslut', command = lambda: self._test_connection())
+        # .quit hade vart samma som lambda: sys.exit()
+        file_menu.add_command(label = 'Avsluta', command = lambda: sys.exit())
+        # För att spara JSON - filen.
+        save_menu.add_command(label = 'Spara JSON...', command = None) #lambda: self._save_data('JSON')
+        save_menu.add_command(label = 'Spara grafer...', command = None) #lambda: self._save_data('Graph')
+        save_menu.add_command(label = 'Spara båda...', command = None) #lambda: self._save_data('Both')
+
     # Funktion som löper kontinuerligt. Den har en tid efter vilken den kör.
     # I inställningar kan man modifiera denna tid.
     
@@ -135,18 +194,15 @@ class tkinterströg:
         self.root.after(self.settings.delay_time,self._check_state)
 
     def _update_screen(self):
-        if self.counting:
+        if self.counting and self.connected:
             # Hämtar data från enheten i bilen.
-            try:
-                temp_dict = self._get_data()
-            except:
-                print("Anslutnings problem. Connection refused.")
-            else:
-                for key, value in temp_dict.items():
-                    self.gauge_dict[key].value = value
+            temp_dict = self._get_data()
 
-                for value in self.gauge_dict.values():
-                    value.give_gauge_value()
+            for key, value in temp_dict.items():
+                self.gauge_dict[key].value = value
+
+            for value in self.gauge_dict.values():
+                value.give_gauge_value()
 
         # Räkna varvtid.
         try:
@@ -200,20 +256,20 @@ class tkinterströg:
 
             # Experiment för att skicka data
 
-    def _send_data(self):
+    def _send_data(self, resource, data = None):
         '''Metod som lagrar data i databas på FLASK REST-API'''
         # Denna används för att det är min dators lokala ip.
-        base_url = "http://192.168.1.129:5000/"
+        self.settings.base_url = "http://192.168.1.129:5000/"
         # Kopierar mätarnas värden och lägger i ett dictionary som sedan
         # skickas med id data1.
-        for key, value in self.gauge_dict.items():
-            self.measurements_dict[key] = value.value
-        print(self.measurements_dict)
-        response = requests.patch(base_url + "measurements/data1", self.measurements_dict)
+        response = requests.get(self.settings.base_url + resource, data)
+
+        return response.json()
+
 
     def _get_data(self):
-        base_url = "http://192.168.1.129:5000/"
-        response = requests.get(base_url + "measurements/data1")
+        self.settings.base_url = "http://192.168.1.129:5000/"
+        response = requests.get(self.settings.base_url + "measurements/data1")
         response = response.json()
         # Skickar ut data utan id.
         del response["id"]
@@ -240,8 +296,8 @@ class tkinterströg:
                 bg = self.canvas['background'],
                 highlightthickness=0)  # Fixa denna canvas så man kan lägga in en punkt.
             self.image_canvas.place(
-                x=self.settings.screen_width * 0.75,
-                y=self.settings.screen_height * 0.75,
+                relx = self.settings.image_canvas_x,
+                rely = self.settings.image_canvas_y,
                 anchor = 'center',
                 )
             self.image_canvas.create_image(
@@ -461,6 +517,6 @@ class tkinterströg:
 
 
 if __name__ == '__main__':
-    strög = tkinterströg()
+    strög = strögware_depot()
     strög.run()
 

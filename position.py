@@ -53,14 +53,13 @@ class Position:
         data_out = pynmea2.NMEAStreamReader()
 
     def get_pos(self):
-    #     new_data = self.ser.readline()
-    #     while new_data[0:6] != '$GPGLL':
-    #         new_data = self.ser.readline()
-    #     new_msg = pynmea2.parse(new_data)
-    #     lat = new_msg.latitude
-    #     lon = new_msg.longitude
-    #     return lat, lon
-        return 1
+        new_data = self.ser.readline()
+        while new_data[0:6] != '$GPGLL':
+            new_data = self.ser.readline()
+        new_msg = pynmea2.parse(new_data)
+        lat = new_msg.latitude
+        lon = new_msg.longitude
+        return lat, lon
 
     def draw_clock(self, relative_x, relative_y, anchor):
         # Fixa varvtidsklockan.

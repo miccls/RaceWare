@@ -1,0 +1,1 @@
+# Samlingsprogram som körs på alla enheter

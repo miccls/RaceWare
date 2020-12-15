@@ -93,6 +93,10 @@ class Measurements(Resource):
         db.session.commit()
         return result
 
+class TestConnection(Resource):
+    ''' Resource som skickar ett enkelt svar för att verifiera anslutning '''
+    def get(self):
+        return {'answer' : 'Ansluten'}
 
 #Vad <string:name> name säger är att det är så man låter användare eller
 #programmet skicka världen med en get eller post, gör jag detta bör jag lägga till
@@ -100,6 +104,7 @@ class Measurements(Resource):
 # parametrar efter varandra
 
 api.add_resource(Measurements, "/measurements/<string:message>")
+api.add_resource(TestConnection, "/testconnection")
 
 if __name__ == "__main__":
     # Detta är min ip.
