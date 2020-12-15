@@ -196,13 +196,15 @@ class strögware_depot:
     def _update_screen(self):
         if self.counting and self.connected:
             # Hämtar data från enheten i bilen.
-            temp_dict = self._get_data()
+            temp_dict = self._get_data('measurements')
 
             for key, value in temp_dict.items():
                 self.gauge_dict[key].value = value
 
             for value in self.gauge_dict.values():
                 value.give_gauge_value()
+            
+            print(self._get_data('gps_data'))
 
         # Räkna varvtid.
         try:
@@ -267,13 +269,16 @@ class strögware_depot:
         return response.json()
 
 
-    def _get_data(self):
+    def _get_data(self, measurement):
         self.settings.base_url = "http://192.168.1.129:5000/"
-        response = requests.get(self.settings.base_url + "measurements/data1")
-        response = response.json()
-        # Skickar ut data utan id.
-        del response["id"]
-        return response
+        if measurement == 'measurements':
+            response = requests.get(self.settings.base_url + "measurements/data1")
+            response = response.json()
+            # Skickar ut data utan id.
+            del response["id"]
+            return response
+        elif measurement == 'gps_data':
+            return requests.get(self.settings.base_url + "location/gps").json()
 
 
     def run(self):

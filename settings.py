@@ -20,7 +20,7 @@ class Settings:
 		if in_car:
 			self.screen_width = 800   #800
 			self.screen_height = 480  #480 är skärmen
-			self.fullscreen = False
+			self.fullscreen = True
 			self.delay_time = 20
 			self.gauge_font_size = 24    
 			self.timer_font_size = 40
