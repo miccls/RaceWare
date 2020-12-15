@@ -87,8 +87,8 @@ class Position:
             if s[7] == '0' or s[7]=='00':
                 print ("no satellite data available")
                 return
-            lat = decode(s[2])
-            lon = decode(s[4])
+            lat = self._decode(s[2])
+            lon = self._decode(s[4])
             return  lat,lon
     
 

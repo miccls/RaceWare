@@ -134,7 +134,7 @@ class strögware_bil:
         self._update_screen()
         if self.update_counter >= 15:
             try:
-                self._send_data()
+                self._send_data('gps_data')
             except: 
                 print("Ingen anslutning")
         self.root.after(self.settings.delay_time,self._check_state)
