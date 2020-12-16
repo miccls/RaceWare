@@ -26,6 +26,7 @@ som än så länge är rödmarkerat kan man bara ignorera.
 '''
 
 
+from lap_timer import LapTimer
 import tkinter as tk
 import tkinter.ttk as ttk
 from settings import Settings
@@ -41,13 +42,14 @@ from os import sys
 from gauges import Gauges
 from shiftlight import Shiftlight
 from rich.traceback import install
+from rich.console import Console
 # Tills jag vet att allt fungerar.
 try:
     from obd_com import OBDII
 except:
     pass
 
-class strögware_bil:
+class StrögwareBil:
 
     def __init__(self):
         # Ett test av rich:s felhantering konsollmanipulering
@@ -58,17 +60,22 @@ class strögware_bil:
         self.settings = Settings(in_car)
         # Hämtar all tillgänglig ban-info.
         self.tracks = Tracks(self)
+        # Console
+        console = Console()
         # Flag för testning av programmet.
         self.counting = False
         self.update_counter = 0
+        self.gps_active = False
         # Kommandon som bilen ska läsa.
+
         self.command_list = {
     	    'rpm' : 'RPM',
  			'km/h' : 'SPEED',
             'throttle' : 'THROTTLE_POS',
             'water' : 'COOLANT_TEMP',
             'oiltemp' : 'OIL_TEMP',
-            'load' : 'ENGINE_LOAD'
+            'load' : 'ENGINE_LOAD',
+            'fuel' : 'FUEL_LEVEL'
         }
 
         self.measurements_dict = {}
@@ -81,9 +88,9 @@ class strögware_bil:
             'throttle' : {'unit' : '%', 'upper_limit' : None},
             'water' : {'unit' : '°', 'upper_limit' : 110},
             'oiltemp' : {'unit' : '°', 'upper_limit' : 180},
-            'load' : {'unit' : 'hp', 'upper_limit' : None}
+            'load' : {'unit' : 'hp', 'upper_limit' : None},
+            'fuel' : {'unit' : '%', 'upper_limit' : None}
             }
-
         try: 
             self.obd_instance = OBDII(self, self.command_list)
             self.settings.obd_active = True
@@ -93,16 +100,20 @@ class strögware_bil:
         # Använder Tkiner för att ställa in 
         # skärmen och startförhållanden.
         self._init_screen()
-        requests.put(self.settings.base_url + "location/gps", {"lat" : 0, "lon" : 0})
-        requests.put(self.settings.base_url + "location/gps", {'rpm' : 0,'kmh' : 0,'throttle' : 0,'water' : 0,'oiltemp' : 0,'load' : 0})
-
+        try:
+            requests.put(self.settings.base_url + "location/gps", {"lat" : 0, "lon" : 0})
+            requests.put(self.settings.base_url + "location/gps", {'rpm' : 0,'kmh' : 0,'throttle' : 0,'water' : 0,'oiltemp' : 0,'load' : 0})
+        except:
+            console.print("[bold red]Ingen anslutning.")
+        else:
+            console.print("[bold green]Ansluten!")
 
     def _init_screen(self):
 
         self.root = tk.Tk()
-        self.root.attributes('-fullscreen', self.settings.fullscreen)
-        self.settings.screen_width = self.root.winfo_screenwidth()
-        self.settings.screen_height = self.root.winfo_screenheight()
+        self.root.attributes('-fullscreen', False)  
+        #self.settings.screen_width = self.root.winfo_screenwidth()
+        #self.settings.screen_height = self.root.winfo_screenheight()
         self.root.bind('<Key>', self._key_pressed)
         self.canvas = tk.Canvas(self.root,
             height = self.settings.screen_height,
@@ -161,7 +172,7 @@ class strögware_bil:
     def _format_time(self):
         '''Formatterar ett antal sekunder'''
         # Här får jag fixa så att det blir fint.
-        display_time = time.time() - self.gps_pos.start_time
+        display_time = time.time() - self.lap_timer.start_time
         decimals = display_time - round(display_time - 0.5)
         # Tar fram hundradelar
         hundreds = round(decimals*100 - 0.5)
@@ -175,13 +186,18 @@ class strögware_bil:
         '''Uppdaterar punkten på kartan'''
         # Nästa steg är att nolla den när man ser att det funkar.
         try:
-            if self.gps_pos.counter:
+            if self.gps_active:
                 lat, lon = self.gps_pos.get_pos()
                 self.gps_data = {"lat" : lat, "lon" : lon}
                 print(self.gps_data)
                 self._send_data('gps_data')
+
+            if self.lap_timer.counter:
+                self.lap_timer.lap_time_label.config(text = self._format_time())
         except:
             pass
+        
+
 
     def _key_pressed(self, event):
         print(event.char)
@@ -194,6 +210,7 @@ class strögware_bil:
             sys.exit()
 
         if event.char == 's':
+            # Om man inte är ansluten kan detta bli problem
             lat, lon = self.gps_pos.get_pos()
             self.gps_data = {"lat" : lat, "lon" : lon}
             print(self.gps_data)
@@ -232,8 +249,14 @@ class strögware_bil:
             
             # Lägg ut position på kartan.
             self.gps_pos = Position(self, self.canvas,)
-            self.gps_pos.draw_clock(0.40, 0.3, 'nw')
-            self.gps_pos.init_GPS()
+            self.lap_timer = LapTimer(self, self.canvas)
+            self.lap_timer.draw_clock(0.42, 0.3, 'nw')
+            try:
+                self.gps_pos.init_GPS()
+            except:
+                pass
+            else:
+                self.gps_active = True
             self.settings.track_available = True
         else:
             # Det finns ingen bild, skriv ut ett meddelande på skärmen.
@@ -258,7 +281,7 @@ class strögware_bil:
         self._check_state()
 
     def _toggle_measurements(self):
-        self.gps_pos.start_count(self)
+        self.lap_timer.start_count(self)
         if self.counting:
                 self.counting = False
         else:
@@ -278,7 +301,13 @@ class strögware_bil:
         relx = 0.25
         for key in self.gauges_info.keys():
             # Om den ska ha enhet, ge den en. Annars låt bli
-            if self.gauges_info[key]['unit']:
+            if key == 'fuel':
+                # Lite speciell, eftersom den inte ska hänga med de andra mätarna
+                self.fuel_gauge = Gauges(self.canvas, main = self,
+                    label_text = key,
+                    unit = self.gauges_info[key]['unit'])
+                self.fuel_gauge.show_gauge(type = 'place', relx = 0.1, rely = 0.15, anchor = 'center')
+            elif self.gauges_info[key]['unit']:
                 self.gauge_dict[key] = Gauges(self.gauge_frame, 
                     main = self,
                     label_text = key,
@@ -312,6 +341,6 @@ class strögware_bil:
 
 
 if __name__ == '__main__':
-    strög = strögware_bil()
+    strög = StrögwareBil()
     strög.run()
 

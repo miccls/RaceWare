@@ -4,6 +4,8 @@ To do:
 Sätt lap_time-labeln i samma frame som den andra lap-datan.
 
 Fixa även en label som beskriver de olika framesen till mätare och varvdata.
+
+FIXA FÖR FUEL LEVEL
 -------------------------------------------------------------------------------------
 
 För medlemmar i storströgarna som är inne på sightseeing::
@@ -23,6 +25,7 @@ som än så länge är rödmarkerat kan man bara ignorera.
 '''
 
 
+from lap_timer import LapTimer
 import tkinter as tk
 from tkinter import messagebox
 import tkinter.ttk as ttk
@@ -32,7 +35,6 @@ from position import Position
 from PIL import Image, ImageTk
 import time
 import json
-import gpiozero
 import requests
 from time import sleep
 from os import sys
@@ -44,7 +46,7 @@ from rich.console import Console
 from obd_com import OBDII
 
 
-class strögware_depot:
+class StrögwareDepot:
 
     def __init__(self):
         # Ett test av rich:s felhantering konsollmanipulering
@@ -67,7 +69,8 @@ class strögware_depot:
             'throttle' : 'THROTTLE_POS',
             'water' : 'COOLANT_TEMP',
             'oiltemp' : 'OIL_TEMP',
-            'load' : 'ENGINE_LOAD'
+            'load' : 'ENGINE_LOAD',
+            'fuel' : 'FUEL_LEVEL'
         }
 
         self.measurements_dict = {}
@@ -80,7 +83,8 @@ class strögware_depot:
             'throttle' : {'unit' : '%', 'upper_limit' : None},
             'water' : {'unit' : '°', 'upper_limit' : 110},
             'oiltemp' : {'unit' : '°', 'upper_limit' : 180},
-            'load' : {'unit' : 'hp', 'upper_limit' : None}
+            'load' : {'unit' : 'hp', 'upper_limit' : None},
+            'fuel' : {'unit' : '%', 'upper_limit' : None}
             }
 
         try: 
@@ -88,13 +92,6 @@ class strögware_depot:
             self.settings.obd_active = True
         except:
             pass
-
-        # Varvdata specificeras i denna dict.
-        self.lap_data = {
-            'antal' : 0,
-            'senaste' : 'N/A',
-            'bästa' : 'N/A',
-            }
 
         self._init_screen()
         #Testa anslutning till api.
@@ -131,6 +128,9 @@ class strögware_depot:
         # Tanken är att denna ska kunna användas för diverse inställningar och kommandon.
         self._init_menu()
         self.root.attributes('-fullscreen', self.settings.fullscreen)
+        # Sätt fönstrets ikon, har för mig att man måste spara som klassattribut.
+        self.icon_photo = tk.PhotoImage(file = self.settings.script_path + "/images/storströg.png")
+        self.root.iconphoto(False, self.icon_photo)
         if self.settings.fullscreen:
             self.settings.screen_width = self.root.winfo_screenwidth()
             self.settings.screen_height = self.root.winfo_screenheight()
@@ -208,7 +208,7 @@ class strögware_depot:
 
         # Räkna varvtid.
         try:
-            if self.gps_pos.counter: 
+            if self.lap_timer.counter: 
              # Kolla här så att allt är ok.
              # Se till så att _format_time används i 
              # _update_pos()!
@@ -220,7 +220,7 @@ class strögware_depot:
     def _format_time(self):
         '''Formatterar ett antal sekunder'''
         # Här får jag fixa så att det blir fint.
-        display_time = time.time() - self.gps_pos.start_time
+        display_time = time.time() - self.lap_timer.start_time
         decimals = display_time - round(display_time - 0.5)
         # Tar fram hundradelar
         hundreds = round(decimals*100 - 0.5)
@@ -233,11 +233,11 @@ class strögware_depot:
     def _update_pos(self):
         '''Uppdaterar punkten på kartan'''
         # Nästa steg är att nolla den när man ser att det funkar.
-        if self.gps_pos.counter:
-            self.gps_pos.lap_time_label.config(text = self._format_time())
+        if self.lap_timer.counter:
+            self.lap_timer.lap_time_label.config(text = self._format_time())
 
     def _toggle_measurements(self):
-        self.gps_pos.start_count(self)
+        self.lap_timer.start_count(self)
         if self.counting:
                 self.counting = False
         else:
@@ -312,8 +312,10 @@ class strögware_depot:
                 image = self.track_image)
             # Lägg ut position på kartan.
             self.gps_pos = Position(self, self.canvas)
-            self.gps_pos.draw_clock(0.45, 0.3, 'nw')
             self.gps_pos.draw_pointer()
+            #self.gps_pos.move(500,500)
+            self.lap_timer = LapTimer(self, self.canvas)
+            self.lap_timer.draw_clock(0.45, 0.3, 'nw')
             self.settings.track_available = True
         else:
             # Det finns ingen bild, skriv ut ett meddelande på skärmen.
@@ -339,40 +341,11 @@ class strögware_depot:
         # Fixa mätare.
         self._init_gauges()
         # Visa varv data:
-        self._init_lap_data()
+        self.lap_timer.init_lap_data(self)
         #self.shiftlight = Shiftlight(self, self.canvas)
         self._check_state()
 
-
-    def _init_lap_data(self):
-        ''' Skapar visare för varvdata '''
-        self.lap_frame = tk.Frame(self.canvas, bg = self.canvas['background'],
-            width = self.settings.screen_width * self.settings.gauge_frame_width,
-            height = self.settings.screen_height * self.settings.gauge_frame_height)
-        self.lap_frame.place(relx = 0.05, rely = (0.05 + self.settings.gauge_frame_height),
-            anchor = 'nw')
-
-        self.lap_info_gauges = {}
-
-        row = 1
-        column = 0
-        for key, value in self.lap_data.items():
-            # Använd gauge-class
-            self.lap_info_gauges[key] = Gauges(self.lap_frame, 
-                main = self, 
-                label_text = key)
-            self.lap_info_gauges[key].value = value
-            self.lap_info_gauges[key].show_gauge(type = 'grid',row = row, column = column)
-            self.lap_info_gauges[key].give_gauge_value()
-            row += 1
-            if row == 4:
-                row = 1
-                column += 1
-
-
-    #################################################
-        
-
+    ################################################# 
 
     def _init_gauges(self):
         ''' Lägger ut mätarna på skärmen '''
@@ -489,11 +462,11 @@ class strögware_depot:
                     label_text = key)
 
             if self.check_box_variables[key].get():    
-                row += 1
                 if row == 4:
                     row = 1
                     column += 1    
                 self.gauge_dict[key].show_gauge(type = 'grid', row = row, column = column)
+                row += 1
 
 
 
@@ -522,6 +495,6 @@ class strögware_depot:
 
 
 if __name__ == '__main__':
-    strög = strögware_depot()
+    strög = StrögwareDepot()
     strög.run()
 

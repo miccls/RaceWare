@@ -44,7 +44,7 @@ class Settings:
 			self.gauge_frame_width = 0.35
 			self.gauge_frame_height = 0.5
 			self.gauge_pos_x = 0.05
-			self.gauge_pos_y = 0.25
+			self.gauge_pos_y = 0.15
 			self.gauge_anchor = 'nw'
 
 

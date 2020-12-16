@@ -1,7 +1,7 @@
-import time
+
 import tkinter as tk
 import serial
-import pynmea2
+
 
 class Position:
 
@@ -37,15 +37,6 @@ class Position:
         
         self.move(100,100)
 
-    def start_count(self, main):
-        self.counter = not self.counter
-        if self.counter:
-            self.start_time = time.time()
-            main.start_count_button.config(text = 'Stop',
-                fg = self.settings.red_color)
-        else: 
-            main.start_count_button.config(text = 'Start',
-                fg = self.settings.green_color)
 
     def init_GPS(self):
         '''Initierar GPS port vald i settings.py.'''
