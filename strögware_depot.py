@@ -1,12 +1,24 @@
 '''
 To do:
 
+FRÄMST: Fixa encapsulation. Riktigt skakigt i detta projekt.
+Vet inte hur väl alla klasser håller encapsulation-regler. Kan göra
+vidare utveckling till en riktig plåga ifall det inte beaktas.
+
 Sätt lap_time-labeln i samma frame som den andra lap-datan.
 
 Fixa även en label som beskriver de olika framesen till mätare och varvdata.
 
-FIXA FÖR FUEL LEVEL
--------------------------------------------------------------------------------------
+Kolla vad som behöver lite refactoring. Jobba på encapsulation. Det kommer hjälpa
+i och med att programmet växer större och större. Just nu är det ganska rörigt och alla
+klasser är och rör i varandra. Det finns mycket "room for improvement".
+
+För övrigt: Kolla på JSON-sparandet. Se till att man får varvdatan från API, se till
+att API har en resurs för att skicka och ta emot varvdata. I den metoden ska även lite
+statistik kunna byggas med numpy för att visualisera ett race. Sist och kanske minst också,
+städa upp rent GUI - mässigt. Lägg till lite rutor som organiserar och pilla även med 
+en eventuell bakgrundsbild. Lägg till lite färg kanske?
+-----------------------------------------------------------------------------------------------
 
 För medlemmar i storströgarna som är inne på sightseeing::
 
@@ -88,10 +100,15 @@ class StrögwareDepot:
             }
 
         try: 
-            self.obd_instance = OBDII(self, self.command_list)
+            self.obd_instance = OBDII()
             self.settings.obd_active = True
-        except:
-            pass
+        # Ersätt med konkret fel.
+        except Exception as e:
+            self.console.print(e)
+        else:
+            # Update the command list.
+            self.command_list = \
+                self.obd_instance.get_available_commands(self.command_list)
 
         self._init_screen()
         #Testa anslutning till api.
@@ -113,11 +130,12 @@ class StrögwareDepot:
                 self.connected = False
                 messagebox.showinfo("Anslutning", "Ej ansluten till API")
                 sleep(0.5) # För att låta fönstret skapas i operativsystemet
-        except:
+        except Exception as e:
                 fail_string = "Anslutning misslyckad."
-                self.console.print("[bold red]"+ fail_string + "\n" + "-"*len(fail_string))
+                self.console.print("[bold red]"+ fail_string + "\n" + "-"*len(fail_string) + 
+                    "\n Fel: ", e)
                 self.connected = False
-                messagebox.showinfo("Anslutning", "Ej ansluten till API")
+                messagebox.showinfo("Anslutning", f"Ej ansluten till API\n Felkod: {e}")
                 sleep(0.5) # För att låta fönstret skapas i operativsystemet
 
 
@@ -179,8 +197,8 @@ class StrögwareDepot:
         # .quit hade vart samma som lambda: sys.exit()
         file_menu.add_command(label = 'Avsluta', command = lambda: sys.exit())
         # För att spara JSON - filen.
-        save_menu.add_command(label = 'Spara JSON...', command = None) #lambda: self._save_data('JSON')
-        save_menu.add_command(label = 'Spara grafer...', command = None) #lambda: self._save_data('Graph')
+        save_menu.add_command(label = 'Spara JSON...', command = lambda x = 'json': self.lap_timer.save_data(x)) #lambda: self._save_data('JSON')
+        save_menu.add_command(label = 'Spara grafer...', command = lambda x = 'graph': self.lap_timer.save_data(x)) #lambda: self._save_data('Graph')
         save_menu.add_command(label = 'Spara båda...', command = None) #lambda: self._save_data('Both')
 
     # Funktion som löper kontinuerligt. Den har en tid efter vilken den kör.
@@ -260,8 +278,6 @@ class StrögwareDepot:
 
     def _send_data(self, resource, data = None):
         '''Metod som lagrar data i databas på FLASK REST-API'''
-        # Denna används för att det är min dators lokala ip.
-        self.settings.base_url = "http://192.168.1.129:5000/"
         # Kopierar mätarnas värden och lägger i ett dictionary som sedan
         # skickas med id data1.
         response = requests.get(self.settings.base_url + resource, data)
@@ -270,7 +286,10 @@ class StrögwareDepot:
 
 
     def _get_data(self, measurement):
-        self.settings.base_url = "http://192.168.1.129:5000/"
+        '''
+        Metod som hämtar data från APIn. Measurement - argumentet anger vilken data man vill hämta.
+        Man har 'measurements' och 'gps_data' som alternativ.
+        '''
         if measurement == 'measurements':
             response = requests.get(self.settings.base_url + "measurements/data1")
             response = response.json()
@@ -285,21 +304,26 @@ class StrögwareDepot:
         self._update_screen()
         self.root.mainloop()
 
-    def _init_track(self,track):
-
+    def _init_track(self, track):
+        '''
+        Denna metod initerar skärmen som är igång när man är ute och kör.
+        Alla mätare initeras tillsammans med GPS - positioneringen.
+        '''
         # När en bana blivit vald körs koden i denna metod.
         # Tar bort listan med knappar.
         self.buttonframe.destroy()
         self.track_dict = self.tracks.tracks_dict[track]
 
         if track in self.tracks.image_dict.keys():
+
+
             #Sätt bildflaggan till true.
             self.track_image = self.tracks.get_image(track)
             self.image_canvas = tk.Canvas(self.canvas,
                 height = self.track_image.height(),
                 width = self.track_image.width(),
                 bg = self.canvas['background'],
-                highlightthickness=0)  # Fixa denna canvas så man kan lägga in en punkt.
+                highlightthickness = 0) 
             self.image_canvas.place(
                 relx = self.settings.image_canvas_x,
                 rely = self.settings.image_canvas_y,
@@ -312,8 +336,10 @@ class StrögwareDepot:
                 image = self.track_image)
             # Lägg ut position på kartan.
             self.gps_pos = Position(self, self.canvas)
-            self.gps_pos.draw_pointer()
-            #self.gps_pos.move(500,500)
+            # Väljer kartans canvas för att rita ut bilden.
+            self.gps_pos.draw_pointer(self.image_canvas)
+            # Flyttar ut punkten till mitten på banan.
+            self.gps_pos.move(0.5, 0.5)
             self.lap_timer = LapTimer(self, self.canvas)
             self.lap_timer.draw_clock(0.45, 0.3, 'nw')
             self.settings.track_available = True
@@ -324,7 +350,7 @@ class StrögwareDepot:
 				self.settings.gauge_font_size,),
                 bg = self.canvas['background'],
                 fg = 'white')
-            self.no_picture_label.place(x=self.settings.screen_width * 0.75,
+            self.no_picture_label.place(x = self.settings.screen_width * 0.75,
                 y=self.settings.screen_height * 0.75,
                 anchor = 'center',)
         
@@ -342,7 +368,6 @@ class StrögwareDepot:
         self._init_gauges()
         # Visa varv data:
         self.lap_timer.init_lap_data(self)
-        #self.shiftlight = Shiftlight(self, self.canvas)
         self._check_state()
 
     ################################################# 
@@ -367,6 +392,9 @@ class StrögwareDepot:
         row = 1
         column = 0
         for key in self.gauges_info.keys():
+            # If key not among the avaliable commands, skip.
+            if not key in self.command_list.keys():
+                continue
             # Om den ska ha enhet, ge den en. Annars låt bli
             if self.gauges_info[key]['unit']:
                 self.gauge_dict[key] = Gauges(self.gauge_frame, 
@@ -469,10 +497,6 @@ class StrögwareDepot:
                 row += 1
 
 
-
-        
-            
-
         # Funktion som uppdaterar värden.
         if self.settings.obd_active:
             self._update_values()
@@ -486,12 +510,6 @@ class StrögwareDepot:
                 value.give_gauge_value()
         except AttributeError:
             pass
-
-        
-
-
-
-        
 
 
 if __name__ == '__main__':

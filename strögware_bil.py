@@ -1,11 +1,7 @@
 '''
 To do:
 
-Fixa GPS info så att man vet när man kört ett varv, lagra detta i en dict som man sedan kan skicka över med 
-allt annat godis. Denna dict ska innehålla den info som syns i depot varianten. Lagra i JSON och spara även ner 
-en kopia av denna när man stänger ner programmet. Både när man trycker på q och när man trycker på stop. Kolla om det 
-redan finns en och om det gör det, byt namn och spara sedan. Gör även en .py fil som samlar depot och bil-varianterna
-och frågar vilken man vill köra. 
+Se till att denna kan skicka varvdata till APIn. Annars börjar denna bli färdig. 
 
 -------------------------------------------------------------------------------------
 
@@ -37,6 +33,7 @@ import time
 import json
 import gpiozero
 import requests
+import obd
 from time import sleep
 from os import sys
 from gauges import Gauges
@@ -92,8 +89,11 @@ class StrögwareBil:
             'fuel' : {'unit' : '%', 'upper_limit' : None}
             }
         try: 
-            self.obd_instance = OBDII(self, self.command_list)
+            command_dict = {'rpm' : obd.commands.RPM, 'water' : obd.commands.COOLANT_TEMP, 'oiltemp' : obd.commands.OIL_TEMP}
+            self.obd_instance = OBDII(self)
             self.settings.obd_active = True
+            for value in command_dict.values():
+                self.obd_instance.set_watch(value)
         except:
             pass
 
@@ -112,6 +112,9 @@ class StrögwareBil:
 
         self.root = tk.Tk()
         self.root.attributes('-fullscreen', False)  
+        # Sätt fönstrets ikon, har för mig att man måste spara som klassattribut.
+        self.icon_photo = tk.PhotoImage(file = self.settings.script_path + "/images/storströg.png")
+        self.root.iconphoto(False, self.icon_photo)
         #self.settings.screen_width = self.root.winfo_screenwidth()
         #self.settings.screen_height = self.root.winfo_screenheight()
         self.root.bind('<Key>', self._key_pressed)
@@ -147,8 +150,10 @@ class StrögwareBil:
         if self.update_counter >= 15:
             try:
                 self._send_data('gps_data')
-            except: 
+            except Exception: 
                 print("Ingen anslutning")
+            finally:
+                self.update_counter = 0
         self.root.after(self.settings.delay_time,self._check_state)
 
     def _update_screen(self):
@@ -221,22 +226,19 @@ class StrögwareBil:
     def _send_data(self, measurement):
         '''Metod som lagrar data i databas på FLASK REST-API'''
         # Denna används för att det är min dators lokala ip.
-        base_url = "http://192.168.1.129:5000/"
+        base_url = self.settings.base_url
         # Kopierar mätarnas värden och lägger i ett dictionary som sedan
         # skickas med id data1.
         if measurement == 'gauge_data':
             for key, value in self.gauge_dict.items():
                 self.measurements_dict[key] = value.value
-            print(self.measurements_dict)
-            response = requests.patch(base_url + "measurements/data1", self.measurements_dict)
+            # Lägger till denna separat från de andra då den inte ligger i det dicitonaryt.
+            self.measurements_dict['fuel'] = self.fuel_gauge.value
+            requests.patch(base_url + "measurements/data1", self.measurements_dict)
         elif measurement == 'gps_data':
             response = requests.patch(base_url + "location/gps", self.gps_data)
             print(response)
 
-
-    def run(self):
-        self._update_screen()
-        self.root.mainloop()
 
     def _init_track(self,track):
 
@@ -253,7 +255,8 @@ class StrögwareBil:
             self.lap_timer.draw_clock(0.42, 0.3, 'nw')
             try:
                 self.gps_pos.init_GPS()
-            except:
+            # Här bör jag identifiera vilket fel som kan uppstå och ersätta 'Exception' med det felet.
+            except Exception:
                 pass
             else:
                 self.gps_active = True
@@ -285,7 +288,7 @@ class StrögwareBil:
         if self.counting:
                 self.counting = False
         else:
-            self.counting = True
+            self.counting = True    
         
 
     def _init_gauges(self):
@@ -325,14 +328,22 @@ class StrögwareBil:
     # Ahhhhhhh de godis.
 
     def _update_values(self):
-        # Lagra uppdatera värden i gauges.
+        #Lagra denna dict någon annanstans.
+        command_dict = ['rpm', 'water', 'oiltemp']
+
         try: # Detta för att jag inte fixat med OBDII än.
-            for key, value in self.gauge_dict.items():
-                value.value = self.obd_instance.get_value(key)
-                value.give_gauge_value()
+            self.gauge_dict['rpm'].value = self.obd_instance.get_value('RPM') >> 2
+            self.gauge_dict['rpm'].give_gauge_value()
+            self.gauge_dict['water'].value = self.obd_instance.get_value('WATER')
+            self.gauge_dict['water'].give_gauge_value()
+            self.gauge_dict['speed'].value = self.obd_instance.get_value('SPEED')
+            self.gauge_dict['speed'].give_gauge_value()
         except AttributeError:
             pass
 
+    def run(self):
+        self._update_screen()
+        self.root.mainloop()
         
 
 

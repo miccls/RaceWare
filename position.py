@@ -20,22 +20,41 @@ class Position:
     
         #self._init_GPS()
 
-    def move(self, x0, y0):
-        '''Flytta bilens GPS-punkt.'''
+    def move(self, relative_x = 0, relative_y = 0):
+        '''Flytta bilens GPS-punkt till den relativa position som man anger 
+        med relative_x och relative_y'''
     
         # Funktion i tkinter som ändrar koordinaterna på objekt på canvas.
-        self.master.coords(self.pointer, x0, y0,
+        x0 = self.pointer_master_width * relative_x
+        y0 = self.pointer_master_height * relative_y 
+        self.pointer_master.coords(self.pointer, x0, y0,
             x0 + self.settings.pos_point_radius,
             y0 + self.settings.pos_point_radius)
 
-    def draw_pointer(self):
-        self.pointer = self.master.create_oval(0,
+        # För att lagra bredden på fönstret
+
+    def draw_pointer(self, master):
+        '''
+        Ritar ut GPS - punkten som visar var bilen befinner sig på banan
+        I samband med detta initieras några viktiga värden.
+        '''
+
+        # Lagrar fönstret i vilket pointern existerar. 
+        self.pointer_master = master
+
+        self.pointer = self.pointer_master.create_oval(0,
             0,
             self.settings.pos_point_radius,
             self.settings.pos_point_radius,
             fill = self.settings.red_color)
-        
-        self.move(100,100)
+
+        # Uppdaterar alla värden som tillhör alla widgetar.
+        self.pointer_master.update()
+        # Hämtar widgetens dimmensioner för att sedan använda dessa i move - metoden.
+        self.pointer_master_width = self.pointer_master.winfo_width()
+        self.pointer_master_height = self.pointer_master.winfo_height()
+
+        self.move()
 
 
     def init_GPS(self):

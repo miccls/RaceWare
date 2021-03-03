@@ -1,8 +1,10 @@
 # Klass som innehåller funktioner som sköter varvdata.
-import tkinter
 
+import json
 import time
 import tkinter as tk
+import pandas as pd
+import matplotlib.pyplot as plt
 from gauges import Gauges
 
 class LapTimer:
@@ -29,6 +31,8 @@ class LapTimer:
         self.counter = False
         self.start_time = 0
 
+        self.lap_num = 0
+        self.lap_times_dict = {}
 
     def init_lap_data(self, main):
         ''' Skapar visare för varvdata '''
@@ -57,6 +61,7 @@ class LapTimer:
 
     def start_count(self, main):
         self.counter = not self.counter
+        print(self.counter)
         if self.counter:
             self.start_time = time.time()
             main.start_count_button.config(text = 'Stop',
@@ -74,3 +79,35 @@ class LapTimer:
             bg = self.master['background'],)
         # Placerar trevligt under shiftlighten. relx = 0.4 rely = 0.3 anchor nw
         self.lap_time_label.place(relx = relative_x, rely = relative_y, anchor = anchor)
+
+    def completed_lap(self):
+        '''
+        Sköter det som ska hända om man tagit sig ett varv runt banan.
+        '''
+        full_lap_time = time.time() - self.start_time
+        # Sparar varvtiden som sekunder i lap_times_dict med varvnummer som nyckel. 
+        # Man kan använda funktionen format_time för att skriva om på fint format
+        self.lap_times_dict[str(self.lap_num)] = full_lap_time
+        self.lap_num += 1
+        # Sätter nya varvets starttid till den nuvarande tiden.
+        self.start_time = time.time()
+        # Inkludera eventuellt en lap_completed flagga här som kan användas för att vänta med att
+        # trigga ett nytt varv tills man har tagit sig runt halva banan.
+
+    def save_data(self, data_type):
+        '''
+        Sparar data från ett race i en mapp. Beroende på vad för data man har
+        valt att spara så tar den passande åtgärder. data_type JSON eller graph fungerar.
+        '''
+        # Sparar i mapp varv_data
+        if data_type == 'json':
+            # Do some pandas-shit in here
+            '''
+            lap_data_df = pd.DataFrame(self.lap_times_dict)
+            '''
+
+            with open(self.settings.script_path + "/varv_data/data.json", 'w') as json_file:
+                json.dump(self.lap_times_dict, json_file)
+        elif data_type == 'graph':
+            # Do some pandas-shit in here + some matplotlib.
+            pass

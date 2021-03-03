@@ -65,7 +65,8 @@ resource_fields = {
     'throttle' : fields.Integer,
     'water' : fields.Integer,
     'oiltemp' : fields.Integer,
-    'load' : fields.Integer
+    'load' : fields.Integer,
+    'fuel' : fields.Integer
 }
 
 gps_resource_field = {
@@ -94,7 +95,7 @@ class Measurements(Resource):
         args = measurements_put_arg.parse_args()
         measurements = MeasurementsModel(id = message,
             rpm = args['rpm'], kmh = args['kmh'], throttle = args['throttle'],
-            water = args['water'], oiltemp = args['oiltemp'], load = args['load'])
+            water = args['water'], oiltemp = args['oiltemp'], load = args['load'], fuel = args['fuel'])
         #Lägg till i databas
         db.session.add(measurements)    
         db.session.commit()    

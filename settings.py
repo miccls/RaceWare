@@ -1,6 +1,7 @@
 import os
 from tkinter.simpledialog import askstring
 from tkinter.messagebox import showinfo
+
 class Settings:
 	'''Settings for the program'''
 	def __init__(self,in_car):
@@ -9,11 +10,11 @@ class Settings:
 		# in the main class with the FULLSCREEN command.
 		self.bg_color = '#000000' # FUTF-gul: #f1b434
 		# Fixa filsökvägen där vi kör skriptet.
-		self.script_path = os.path.dirname( os.path.abspath(__file__) )
+		self.script_path = os.path.dirname(os.path.abspath(__file__))
 		self.gauge_bg_color = (0,0,0)
 		self.space = -30 # Mimic the push of a spacebar in images
 		self.counter = False
-		self.car_gauges = ['rpm', 'water', 'oiltemp']
+		self.car_gauges = ['rpm', 'water', 'speed']
 		self.base_url = "http://192.168.1.129:5000/"
 
 		# Applikationsspecifika inställningar
@@ -44,7 +45,7 @@ class Settings:
 			self.gauge_frame_width = 0.35
 			self.gauge_frame_height = 0.5
 			self.gauge_pos_x = 0.05
-			self.gauge_pos_y = 0.15
+			self.gauge_pos_y = 0.1
 			self.gauge_anchor = 'nw'
 
 
