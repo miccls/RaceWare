@@ -53,9 +53,7 @@ from os import sys
 from gauges import Gauges
 from rich.traceback import install
 from rich.console import Console
-# Tills jag vet att allt fungerar.
-
-from obd_com import OBDII
+#
 
 
 class StrögwareDepot:

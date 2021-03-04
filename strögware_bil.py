@@ -52,9 +52,8 @@ class StrögwareBil:
         # Ett test av rich:s felhantering konsollmanipulering
         install()
         # En inställning för att justera inställningar rätt
-        in_car = True
         # Hämtar de tillgängliga inställningarna.
-        self.settings = Settings(in_car)
+        self.settings = Settings(in_car = True)
         # Hämtar all tillgänglig ban-info.
         self.tracks = Tracks(self)
         # Console
@@ -67,7 +66,7 @@ class StrögwareBil:
 
         self.command_list = {
     	    'rpm' : 'RPM',
- 			'km/h' : 'SPEED',
+ 			'kmh' : 'SPEED',
             'throttle' : 'THROTTLE_POS',
             'water' : 'COOLANT_TEMP',
             'oiltemp' : 'OIL_TEMP',
@@ -89,11 +88,8 @@ class StrögwareBil:
             'fuel' : {'unit' : '%', 'upper_limit' : None}
             }
         try: 
-            command_dict = {'rpm' : obd.commands.RPM, 'water' : obd.commands.COOLANT_TEMP, 'oiltemp' : obd.commands.OIL_TEMP}
             self.obd_instance = OBDII(self)
             self.settings.obd_active = True
-            for value in command_dict.values():
-                self.obd_instance.set_watch(value)
         except:
             pass
 
@@ -102,7 +98,8 @@ class StrögwareBil:
         self._init_screen()
         try:
             requests.put(self.settings.base_url + "location/gps", {"lat" : 0, "lon" : 0})
-            requests.put(self.settings.base_url + "location/gps", {'rpm' : 0,'kmh' : 0,'throttle' : 0,'water' : 0,'oiltemp' : 0,'load' : 0})
+            requests.put(self.settings.base_url + "location/gps",
+                {'rpm' : 0,'kmh' : 0,'throttle' : 0,'water' : 0,'oiltemp' : 0,'load' : 0})
         except:
             console.print("[bold red]Ingen anslutning.")
         else:
@@ -113,7 +110,8 @@ class StrögwareBil:
         self.root = tk.Tk()
         self.root.attributes('-fullscreen', False)  
         # Sätt fönstrets ikon, har för mig att man måste spara som klassattribut.
-        self.icon_photo = tk.PhotoImage(file = self.settings.script_path + "/images/storströg.png")
+        self.icon_photo = tk.PhotoImage(
+            file = self.settings.script_path + "/images/storströg.png")
         self.root.iconphoto(False, self.icon_photo)
         #self.settings.screen_width = self.root.winfo_screenwidth()
         #self.settings.screen_height = self.root.winfo_screenheight()
@@ -123,6 +121,10 @@ class StrögwareBil:
             width = self.settings.screen_width,
             bg = self.settings.bg_color)
         self.canvas.pack()
+        self._draw_start_buttons()
+
+    def _draw_start_buttons(self):
+        '''Draws the map buttons on the screen'''
         self.buttonframe = tk.Frame(self.canvas,
             bg = '#f5d742')
         self.buttonframe.place(relx = 0.5, rely = 0.5,
@@ -141,7 +143,9 @@ class StrögwareBil:
             height = 2,
             command = lambda track = key: self._init_track(track))   
             button_dict[key].pack()
-    
+
+#--------------- Function running everything. Add stuff to run here -----------------#
+
     def _check_state(self):
         if self.settings.track_available:
             self._update_pos()
@@ -150,14 +154,16 @@ class StrögwareBil:
         if self.update_counter >= 15:
             try:
                 self._send_data('gps_data')
-            except Exception: 
-                print("Ingen anslutning")
+            except Exception as e: 
+                print(f"Ingen anslutning: {e}")
             finally:
                 self.update_counter = 0
-        self.root.after(self.settings.delay_time,self._check_state)
+        self.root.after(self.settings.delay_time, self._check_state)
+
+#------------------------------------------------------------------------------------#
 
     def _update_screen(self):
-        if self.counting:
+        if self.counting and not self.settings.obd_active:
             self.update_counter += 1
             for value in self.gauge_dict.values():
                 if value.value < 8300:
@@ -328,16 +334,13 @@ class StrögwareBil:
     # Ahhhhhhh de godis.
 
     def _update_values(self):
-        #Lagra denna dict någon annanstans.
-        command_dict = ['rpm', 'water', 'oiltemp']
-
-        try: # Detta för att jag inte fixat med OBDII än.
-            self.gauge_dict['rpm'].value = self.obd_instance.get_value('RPM') >> 2
-            self.gauge_dict['rpm'].give_gauge_value()
-            self.gauge_dict['water'].value = self.obd_instance.get_value('WATER')
-            self.gauge_dict['water'].give_gauge_value()
-            self.gauge_dict['speed'].value = self.obd_instance.get_value('SPEED')
-            self.gauge_dict['speed'].give_gauge_value()
+        '''Updates the values of the on-screen gauges'''
+        try: 
+            for command in self.settings.car_gauges:
+                # If we are getting the rpm-value 
+                self.gauge_dict[command].value = self.obd_instance.get_value(command) >>\
+                    2*(command == 'rpm')
+                self.gauge_dict[command].give_gauge_value()
         except AttributeError:
             pass
 

@@ -14,7 +14,7 @@ class Settings:
 		self.gauge_bg_color = (0,0,0)
 		self.space = -30 # Mimic the push of a spacebar in images
 		self.counter = False
-		self.car_gauges = ['rpm', 'water', 'speed']
+		self.car_gauges = ['rpm', 'water', 'kmh']
 		self.base_url = "http://192.168.1.129:5000/"
 
 		# Applikationsspecifika inställningar
