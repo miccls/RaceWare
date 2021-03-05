@@ -15,7 +15,7 @@ class OBDII:
   }
   _data_index = {
     'rpm' : [2,3],
-    'km/h' : 2,
+    'kmh' : 2,
     'water' : 2
   }
 
@@ -92,19 +92,23 @@ class OBDII:
     response = self.ser.readlines()
     # If it goes though connection process, wait.
     if 'SEARCHING...' in response[-1].decode():
-        sleep(2)
+        sleep(5)
         response = self.ser.readlines()
     #print(response)
-    data = response[-1].split()
+    data = {len(line.split()): line.split() for line in response}
+    data = data[max(list(data.keys()))]
     data = [byte.decode() for byte in data]
     data_index = self._data_index[command]
     # Separate idicies for every command, or at least it appears
     # to be so.
-    if type(data_index) is list:
-      return float(int('0x' + data[min(data_index)]
-        + data[max(data_index)]), 0)
-    else:
-      return float(int('0x' + data[data_index], 0))
+    try:
+        if type(data_index) is list:
+          return float(int('0x' + data[min(data_index)]
+            + data[max(data_index)]), 0)
+        else:
+          return float(int('0x' + data[data_index], 0))
+    except ValueError as e:
+        print(data)
 
   def end(self):
     # Close the connection
@@ -113,4 +117,4 @@ class OBDII:
 if __name__ == '__main__':
   obd = OBDII('/dev/rfcomm10')
   while True:
-    pprint(obd.get_value('speed')) 
+    pprint(obd.get_value('kmh')) 

@@ -3,8 +3,8 @@
 import json
 import time
 import tkinter as tk
-import pandas as pd
-import matplotlib.pyplot as plt
+#import pandas as pd
+#import matplotlib.pyplot as plt
 from gauges import Gauges
 
 class LapTimer:
