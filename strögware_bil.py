@@ -107,11 +107,11 @@ class StrögwareBil:
     def _init_screen(self):
 
         self.root = tk.Tk()
-        self.root.attributes('-fullscreen', False)  
+        self.root.attributes('-fullscreen', True)  
         # Sätt fönstrets ikon, har för mig att man måste spara som klassattribut.
-        self.icon_photo = tk.PhotoImage(
-            file = self.settings.script_path + "/images/storströg.png")
-        self.root.iconphoto(False, self.icon_photo)
+        #self.icon_photo = tk.PhotoImage(
+        #    file = self.settings.script_path + "/images/storströg.png")
+        #self.root.iconphoto(False, self.icon_photo)
         #self.settings.screen_width = self.root.winfo_screenwidth()
         #self.settings.screen_height = self.root.winfo_screenheight()
         self.root.bind('<Key>', self._key_pressed)
