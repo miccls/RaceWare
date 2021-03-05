@@ -27,11 +27,7 @@ class Shiftlight:
 		
 
 	def update_colors(self,rpm):
-		try: 
-			level
-		except NameError:
-			level = 0
-			color = ''
+		'''Updates the color if the shiftlight.'''
 
 		# Change this if desired, to potentially use 
 		# self.light_number vaeiable to chose lights.

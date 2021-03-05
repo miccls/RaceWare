@@ -15,10 +15,9 @@ Här, i denna fil kommer to do listan uppdateras och ni kan
 följa arbetet på github.com/miccls/Str-gware där det kommer uppdateras
 frekvent.
 
-Vissa ställen markerar även VScode som rött för att den inte ser att pygame
-har de attribut som jag använder. Eftersom dessa är attribut i klasser 
-som finns inne i pygame modulen så tror den att de inte finns så de 
-som än så länge är rödmarkerat kan man bara ignorera.
+Funktionen _update_pos() verkar vara problematisk.
+Kan vara att den inte är ansluten till GPS-modulen...
+
 '''
 
 
@@ -108,7 +107,7 @@ class StrögwareBil:
     def _init_screen(self):
 
         self.root = tk.Tk()
-        self.root.attributes('-fullscreen', True)  
+        self.root.attributes('-fullscreen', False)  
         # Sätt fönstrets ikon, har för mig att man måste spara som klassattribut.
         self.icon_photo = tk.PhotoImage(
             file = self.settings.script_path + "/images/storströg.png")
@@ -148,7 +147,8 @@ class StrögwareBil:
 
     def _check_state(self):
         if self.settings.track_available:
-            self._update_pos()
+            #self._update_pos()
+            pass
         self._update_values()
         self._update_screen()
         if self.update_counter >= 15:
@@ -177,7 +177,7 @@ class StrögwareBil:
              # Kolla här så att allt är ok.
              # Se till så att _format_time används i 
              # _update_pos()!
-        self._update_pos()
+        #self._update_pos()
 
 
     def _format_time(self):

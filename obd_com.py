@@ -95,6 +95,7 @@ class OBDII:
         sleep(5)
         response = self.ser.readlines()
     #print(response)
+    # Dictionary with keys representing number of "words".
     data = {len(line.split()): line.split() for line in response}
     data = data[max(list(data.keys()))]
     data = [byte.decode() for byte in data]
