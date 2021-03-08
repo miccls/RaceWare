@@ -19,6 +19,7 @@ class Settings:
 
 		# Applikationsspecifika inställningar
 		if in_car:
+			self.OBD_port = '/dev/rfcomm10'
 			self.screen_width = 800   #800
 			self.screen_height = 480  #480 är skärmen
 			self.fullscreen = True

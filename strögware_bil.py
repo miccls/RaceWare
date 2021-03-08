@@ -30,9 +30,7 @@ from position import Position
 from PIL import Image, ImageTk
 import time
 import json
-import gpiozero
 import requests
-import obd
 from time import sleep
 from os import sys
 from gauges import Gauges
@@ -40,10 +38,8 @@ from shiftlight import Shiftlight
 from rich.traceback import install
 from rich.console import Console
 # Tills jag vet att allt fungerar.
-try:
-    from obd_com import OBDII
-except:
-    pass
+from obd_com import OBDII
+
 
 class StrögwareBil:
 
@@ -86,12 +82,9 @@ class StrögwareBil:
             'load' : {'unit' : 'hp', 'upper_limit' : None},
             'fuel' : {'unit' : '%', 'upper_limit' : None}
             }
-        try: 
-            self.obd_instance = OBDII(self)
-            self.settings.obd_active = True
-        except:
-            pass
-
+        #try: Detta måste fungera, annars ska det krascha. 
+        self.obd_instance = OBDII(self.settings.OBD_port)
+        self.settings.obd_active = True
         # Använder Tkiner för att ställa in 
         # skärmen och startförhållanden.
         self._init_screen()

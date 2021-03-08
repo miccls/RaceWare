@@ -118,4 +118,4 @@ class OBDII:
 if __name__ == '__main__':
   obd = OBDII('/dev/rfcomm10')
   while True:
-    pprint(obd.get_value('kmh')) 
+    print(obd.get_value('kmh')) 
