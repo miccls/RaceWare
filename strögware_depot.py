@@ -57,7 +57,7 @@ from rich.console import Console
 
 
 class StrögwareDepot:
-
+    
     def __init__(self):
         # Ett test av rich:s felhantering konsollmanipulering
         install()

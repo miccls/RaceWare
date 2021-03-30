@@ -9,14 +9,14 @@ class OBDII:
   # Class variables.
   _delay = 0.4
   _commands = {
-    'rpm' : b'010C\n\r',
-    'kmh' : b'010D\n\r',
-    'water' : b'0105\n\r'
+    'rpm' : b'010C\r',
+    'kmh' : b'010D\r',
+    'water' : b'0105\r'
   }
   _data_index = {
-    'rpm' : [2,3],
-    'kmh' : 2,
-    'water' : 2
+    'rpm' : -2,
+    'kmh' : -1,
+    'water' : -1
   }
 
   def __init__(self, port):
@@ -34,10 +34,11 @@ class OBDII:
     communication by OBDII-commands.
     '''
     setup_commands = [
-      b'atz\n\r',     # Initiation of adapter.
-      b'atl1\n\r',   
-      b'ath0\n\r',
-      b'atsp0\n\r'
+      b'atz\r',     # Initiation of adapter.
+      b'atl1\r',   
+      b'ath0\r',
+      b'atat2',
+      b'atsp0\r'
     ]
     for command in setup_commands:
       self.ser.write(command)
@@ -103,13 +104,24 @@ class OBDII:
     # Separate idicies for every command, or at least it appears
     # to be so.
     try:
-        if type(data_index) is list:
-          return float(int('0x' + data[min(data_index)]
-            + data[max(data_index)]), 0)
-        else:
-          return float(int('0x' + data[data_index], 0))
-    except ValueError as e:
-        print(data)
+          return float(int('0x' + \
+            self.unpackData(data[data_index:]), 0))
+
+    except (ValueError, KeyError) as e:
+        print(data, e, sep = '\n')
+        # To avoid a NoneType error.
+        return 0
+
+  @classmethod
+  def unpackData(cls, arr):
+    '''Recursive metod that unpacks array 
+    of strings.
+    '''
+    # Will evaluate to False if empty.
+    if arr:
+      return arr[0] + cls.unpack(arr[1:])
+    else:
+      return ''
 
   def end(self):
     # Close the connection
