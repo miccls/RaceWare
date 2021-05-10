@@ -62,7 +62,7 @@ class OBDII:
       return
     except Exception as e:
       message = e
-    if "[Errno 2]" in e:
+    if "[Errno 2]" in str(message):
       # If the prechosen port can't be opened.
       success = self._handle_port_error()
     if not success:
