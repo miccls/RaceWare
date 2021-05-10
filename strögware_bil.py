@@ -8,6 +8,10 @@ Lägga in multiprocessing. Kan vara aktuellt att lägga in C++ i olika delar men
 Funktionen _update_pos() verkar vara problematisk.
 Kan vara att den inte är ansluten till GPS-modulen...
 
+Så att den del av programmet som skickar data till depån gör detta på en egen kärna.
+Kanske kan fungera med en egen tråd också, tror det. Men oavsett, tråd eller process: 
+Fixa det så att det kan pågå i bakgrunden annars hänger sig programmet periodiskt.
+
 -------------------------------------------------------------------------------------
 
 För medlemmar i storströgarna som är inne på sightseeing::
@@ -28,7 +32,7 @@ frekvent.
 from lap_timer import LapTimer
 import tkinter as tk
 import tkinter.ttk as ttk
-# For multiprocessing.
+# For multiprocessing. This is for sending to depot
 import concurrent.futures as future
 from settings import Settings
 from tracks import Tracks
