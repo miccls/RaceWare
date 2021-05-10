@@ -350,11 +350,6 @@ class StrögwareBil:
     def run(self):
         self._update_screen()
         self.root.mainloop()
-        
-
-
-
-        
 
 
 if __name__ == '__main__':

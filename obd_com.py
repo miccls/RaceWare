@@ -14,9 +14,9 @@ class OBDII:
     'water' : b'0105\r'
   }
   _data_index = {
-    'rpm' : -2,
-    'kmh' : -1,
-    'water' : -1
+    'rpm' : -3,
+    'kmh' : -2,
+    'water' : -2
   }
 
   def __init__(self, port):
@@ -115,7 +115,7 @@ class OBDII:
     # to be so.
     try:
           return float(int('0x' + \
-            cls._unpackData(data[data_index:]), 0)) * (0.25 if command == 'rpm' else 1)
+            cls._unpackData(data[data_index:-1]), 0)) * (0.25 if command == 'rpm' else 1)
 
     except (ValueError, KeyError) as e:
         print(data, e, sep = '\n')
