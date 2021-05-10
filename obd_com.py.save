@@ -1,0 +1,120 @@
+
+
+from time import sleep
+import serial
+from serial.serialutil import SerialException
+from pprint import pprint
+
+class OBDII:
+  # Class variables.
+  _delay = 0.4
+  _commands = {
+    'rpm' : b'010C\n\r',
+    'kmh' : b'010D\n\r',
+    'water' : b'0105\n\r'
+  }
+  _data_index = {
+    'rpm' : [2,3],
+    'kmh' : 2,
+    'water' : 2
+  }
+
+  def __init__(self, port):
+
+    # OBD setup
+    self.port = port
+    self.__connect()
+
+    # Success is assumed here.
+    self.__setup()
+    # After here, we can communicate with the obd.
+
+  def __setup(self):
+    '''Preparing bluetooth adapter for 
+    communication by OBDII-commands.
+    '''
+    setup_commands = [
+      b'atz\n\r',     # Initiation of adapter.
+      b'atl1\n\r',   
+      b'ath0\n\r',
+      b'atsp0\n\r'
+    ]
+    for command in setup_commands:
+      self.ser.write(command)
+      # Wait small ammount of time to make sure message
+      # is recieved.
+      sleep(self._delay)
+    # Empty incoming buffer.
+    self.ser.readlines()
+    
+  def __connect(self,):
+    '''Method that connects to the bluetooth
+    serial port [port].
+    '''
+    b_rate = 38400
+    e = ""
+    # Try to connect to the serial-adapter.
+    try:
+      self.ser = serial.Serial(baudrate = b_rate,
+        port = self.port, timeout = 1)
+      success = True
+      return
+    except Exception as e:
+      message = e
+    if "[Errno 2]" in e:
+      # If the prechosen port can't be opened.
+      success = self._handle_port_error()
+    if not success:
+      raise SerialException('No baudrate resulted in connection.')
+
+  def _handle_port_error(self) -> bool:
+    '''Handle situation where port can't be
+    opened. 
+    '''
+    # Try port 0 -> 99
+    for i in range(100):
+      try:
+        self.ser = serial.Serial(baudrate = 38400,
+          port = "/dev/rfcomm" + str(i), timeout = 1)
+        return True
+      except Exception:
+        pass
+    # Could not connect.
+    return False
+
+  def get_value(self, command):
+    '''Request value from the car'''
+    self.ser.write(self._commands[command])
+    return self._parse_response(command)
+
+  def _parse_response(self, command):
+    '''Extracts data from the recieved message.'''
+    response = self.ser.readlines()
+    # If it goes though connection process, wait.
+	    if 'SEARCHING...' in response[-1].decode():
+	        sleep(5)
+	        response = self.ser.readlines()    #print(response)
+    # Dictionary with keys representing number of "words".
+    data = {len(line.split()): line.split() for line in response}
+    data = data[max(list(data.keys()))]
+    data = [byte.decode() for byte in data]
+    data_index = self._data_index[command]
+    # Separate idicies for every command, or at least it appears
+    # to be so.
+    try:
+        if type(data_index) is list:
+          return float(int('0x' + data[min(data_index)]
+            + data[max(data_index)]), 0)
+        else:
+          return float(int('0x' + data[data_index], 0))
+    except ValueError as e:
+        print(data)
+
+  def end(self):
+    # Close the connection
+    self.ser.close()
+
+if __name__ == '__main__':
+  obd = OBDII('/dev/rfcomm10')
+  while True:
+    pprint(obd.get_value('kmh')) 
