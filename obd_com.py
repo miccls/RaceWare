@@ -1,3 +1,11 @@
+'''
+To do: 
+
+Get the value-fetching method to be able to send
+and recieve messages with multiple commands in one.
+This will hopefully decrease response times even further!
+
+'''
 
 
 from time import sleep
