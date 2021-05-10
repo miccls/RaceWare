@@ -9,9 +9,9 @@ class OBDII:
   # Class variables.
   _delay = 0.4
   _commands = {
-    'rpm' : b'010C\r',
-    'kmh' : b'010D\r',
-    'water' : b'0105\r'
+    'rpm' : b'010C1\r',
+    'kmh' : b'010D1\r',
+    'water' : b'01051\r'
   }
   _data_index = {
     'rpm' : -3,
@@ -57,7 +57,7 @@ class OBDII:
     # Try to connect to the serial-adapter.
     try:
       self.ser = serial.Serial(baudrate = b_rate,
-        port = self.port, timeout = 1)
+        port = self.port, timeout = .1)
       success = True
       return
     except Exception as e:
@@ -76,7 +76,7 @@ class OBDII:
     for i in range(100):
       try:
         self.ser = serial.Serial(baudrate = 38400,
-          port = "/dev/ttyUSB" + str(i), timeout = 1)
+          port = "/dev/ttyUSB" + str(i), timeout = .1)
         return True
       except Exception:
         pass
