@@ -2,11 +2,6 @@
 To do:
 
 Se till att denna kan skicka varvdata till APIn. Annars börjar denna bli färdig. 
-Lägga in multiprocessing. Kan vara aktuellt att lägga in C++ i olika delar men just nu
-är framerate:en riktigt hög så är nog lungt på den fronten.
-
-Funktionen _update_pos() verkar vara problematisk.
-Kan vara att den inte är ansluten till GPS-modulen...
 
 -------------------------------------------------------------------------------------
 
@@ -20,23 +15,25 @@ Här, i denna fil kommer to do listan uppdateras och ni kan
 följa arbetet på github.com/miccls/Str-gware där det kommer uppdateras
 frekvent.
 
-
-
+Vissa ställen markerar även VScode som rött för att den inte ser att pygame
+har de attribut som jag använder. Eftersom dessa är attribut i klasser 
+som finns inne i pygame modulen så tror den att de inte finns så de 
+som än så länge är rödmarkerat kan man bara ignorera.
 '''
 
 
 from lap_timer import LapTimer
 import tkinter as tk
 import tkinter.ttk as ttk
-# For multiprocessing.
-import concurrent.futures as future
 from settings import Settings
 from tracks import Tracks
 from position import Position
 from PIL import Image, ImageTk
 import time
 import json
+import gpiozero
 import requests
+import obd
 from time import sleep
 from os import sys
 from gauges import Gauges
@@ -44,8 +41,10 @@ from shiftlight import Shiftlight
 from rich.traceback import install
 from rich.console import Console
 # Tills jag vet att allt fungerar.
-from obd_com import OBDII
-
+try:
+    from obd_com import OBDII
+except:
+    pass
 
 class StrögwareBil:
 
@@ -88,9 +87,12 @@ class StrögwareBil:
             'load' : {'unit' : 'hp', 'upper_limit' : None},
             'fuel' : {'unit' : '%', 'upper_limit' : None}
             }
-        #try: Detta måste fungera, annars ska det krascha. 
-        self.obd_instance = OBDII(self.settings.OBD_port)
-        self.settings.obd_active = True
+        try: 
+            self.obd_instance = OBDII(self)
+            self.settings.obd_active = True
+        except:
+            pass
+
         # Använder Tkiner för att ställa in 
         # skärmen och startförhållanden.
         self._init_screen()
@@ -106,7 +108,7 @@ class StrögwareBil:
     def _init_screen(self):
 
         self.root = tk.Tk()
-        self.root.attributes('-fullscreen', True)  
+        #self.root.attributes('-fullscreen', False)
         # Sätt fönstrets ikon, har för mig att man måste spara som klassattribut.
         #self.icon_photo = tk.PhotoImage(
         #    file = self.settings.script_path + "/images/storströg.png")
@@ -146,17 +148,17 @@ class StrögwareBil:
 
     def _check_state(self):
         if self.settings.track_available:
-            #self._update_pos()
-            pass
+            self._update_pos()
         self._update_values()
         self._update_screen()
+        print("hipphapp")
         if self.update_counter >= 15:
-            try:
-                self._send_data('gps_data')
-            except Exception as e: 
+            try:                self._send_data('gps_data')
+            except Exception as e:
                 print(f"Ingen anslutning: {e}")
             finally:
                 self.update_counter = 0
+        print("hopphepp")
         self.root.after(self.settings.delay_time, self._check_state)
 
 #------------------------------------------------------------------------------------#
@@ -176,7 +178,7 @@ class StrögwareBil:
              # Kolla här så att allt är ok.
              # Se till så att _format_time används i 
              # _update_pos()!
-        #self._update_pos()
+        self._update_pos()
 
 
     def _format_time(self):
@@ -186,7 +188,6 @@ class StrögwareBil:
         decimals = display_time - round(display_time - 0.5)
         # Tar fram hundradelar
         hundreds = round(decimals*100 - 0.5)
-        # Sekunder och så vidare.
         seconds = round(display_time - 0.5)
         minutes = round((seconds/60) - 0.5)
         seconds -= minutes*60
@@ -252,7 +253,7 @@ class StrögwareBil:
         # Tar bort listan med knappar.
         self.buttonframe.destroy()
         self.track_dict = self.tracks.tracks_dict[track]
-
+        print(track)
         if track in self.tracks.image_dict.keys():
             
             # Lägg ut position på kartan.
@@ -287,6 +288,7 @@ class StrögwareBil:
         # Fixa mätare.
         self._init_gauges()
         self.shiftlight = Shiftlight(self, self.canvas)
+        print("hopp")
         self._check_state()
 
     def _toggle_measurements(self):
@@ -296,8 +298,6 @@ class StrögwareBil:
         else:
             self.counting = True    
         
-
-################## Initializing the gauges. The ones that are shown and those who are not ###################
 
     def _init_gauges(self):
         ''' Lägger ut mätarna på skärmen '''
@@ -337,11 +337,11 @@ class StrögwareBil:
 
     def _update_values(self):
         '''Updates the values of the on-screen gauges'''
-        # Here, try to use multiprocessing instead.
-        try:
-            results = map(self.obd_instance.get_value, self.settings.car_gauges)
-            for r, command in zip(results, self.settings.car_gauges):
-                self.gauge_dict[command].value = r
+        try: 
+            for command in self.settings.car_gauges:
+                # If we are getting the rpm-value 
+                self.gauge_dict[command].value = self.obd_instance.get_value(command) >>\
+                    2*(command == 'rpm')
                 self.gauge_dict[command].give_gauge_value()
         except AttributeError:
             pass
@@ -349,6 +349,11 @@ class StrögwareBil:
     def run(self):
         self._update_screen()
         self.root.mainloop()
+        
+
+
+
+        
 
 
 if __name__ == '__main__':
