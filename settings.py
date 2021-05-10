@@ -12,7 +12,7 @@ class Settings:
 		# Fixa filsökvägen där vi kör skriptet.
 		self.script_path = os.path.dirname(os.path.abspath(__file__))
 		self.gauge_bg_color = (0,0,0)
-		self.space = -30 # Mimic the push of a spacebar in images
+		self.space = -30 # Mimic blank space in images
 		self.counter = False
 		self.car_gauges = ['rpm', 'water', 'kmh']
 		self.base_url = "http://192.168.1.129:5000/"

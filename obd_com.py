@@ -115,7 +115,7 @@ class OBDII:
     # to be so.
     try:
           return float(int('0x' + \
-            cls._unpackData(data[data_index:]), 0))
+            cls._unpackData(data[data_index:]), 0)) * (0.25 if command == 'rpm' else 1)
 
     except (ValueError, KeyError) as e:
         print(data, e, sep = '\n')

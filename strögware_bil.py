@@ -2,6 +2,11 @@
 To do:
 
 Se till att denna kan skicka varvdata till APIn. Annars börjar denna bli färdig. 
+Lägga in multiprocessing. Kan vara aktuellt att lägga in C++ i olika delar men just nu
+är framerate:en riktigt hög så är nog lungt på den fronten.
+
+Funktionen _update_pos() verkar vara problematisk.
+Kan vara att den inte är ansluten till GPS-modulen...
 
 -------------------------------------------------------------------------------------
 
@@ -15,8 +20,7 @@ Här, i denna fil kommer to do listan uppdateras och ni kan
 följa arbetet på github.com/miccls/Str-gware där det kommer uppdateras
 frekvent.
 
-Funktionen _update_pos() verkar vara problematisk.
-Kan vara att den inte är ansluten till GPS-modulen...
+
 
 '''
 
@@ -24,6 +28,8 @@ Kan vara att den inte är ansluten till GPS-modulen...
 from lap_timer import LapTimer
 import tkinter as tk
 import tkinter.ttk as ttk
+# For multiprocessing.
+import concurrent.futures as future
 from settings import Settings
 from tracks import Tracks
 from position import Position
@@ -180,6 +186,7 @@ class StrögwareBil:
         decimals = display_time - round(display_time - 0.5)
         # Tar fram hundradelar
         hundreds = round(decimals*100 - 0.5)
+        # Sekunder och så vidare.
         seconds = round(display_time - 0.5)
         minutes = round((seconds/60) - 0.5)
         seconds -= minutes*60
@@ -290,6 +297,8 @@ class StrögwareBil:
             self.counting = True    
         
 
+################## Initializing the gauges. The ones that are shown and those who are not ###################
+
     def _init_gauges(self):
         ''' Lägger ut mätarna på skärmen '''
         self.gauge_frame = tk.Frame(self.canvas, bg = self.canvas['background'],
@@ -328,14 +337,15 @@ class StrögwareBil:
 
     def _update_values(self):
         '''Updates the values of the on-screen gauges'''
-        try: 
-            for command in self.settings.car_gauges:
-                # If we are getting the rpm-value 
-                self.gauge_dict[command].value = self.obd_instance.get_value(command) >>\
-                    2*(command == 'rpm')
-                self.gauge_dict[command].give_gauge_value()
-        except AttributeError:
-            pass
+        # Here, try to use multiprocessing instead.
+        with future.ProcessPoolExecutor() as ex:
+            try:
+                results = ex.map(self.obd_instance.get_value, self.settings.car_gauges)
+                for r, command in zip(results, self.settings.car_gauges):
+                    self.gauge_dict[command].value = r
+                    self.gauge_dict[command].give_gauge_value()
+            except AttributeError:
+                pass
 
     def run(self):
         self._update_screen()
