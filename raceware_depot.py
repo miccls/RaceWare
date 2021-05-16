@@ -56,7 +56,7 @@ from rich.console import Console
 #
 
 
-class StrögwareDepot:
+class RaceWareDepot:
     
     def __init__(self):
         # Ett test av rich:s felhantering konsollmanipulering
@@ -511,6 +511,6 @@ class StrögwareDepot:
 
 
 if __name__ == '__main__':
-    strög = StrögwareDepot()
-    strög.run()
+    race = RaceWareDepot()
+    race.run()
 

@@ -51,7 +51,7 @@ from rich.console import Console
 from obd_com import OBDII
 
 
-class StrögwareBil:
+class RaceWareCar:
 
     def __init__(self):
         # Ett test av rich:s felhantering konsollmanipulering
@@ -356,6 +356,7 @@ class StrögwareBil:
 
 
 if __name__ == '__main__':
-    strög = StrögwareBil()
-    strög.run()
+    race = RaceWareCar()
+    # Ready, set, gooooooo!!!!
+    race.run()
 
